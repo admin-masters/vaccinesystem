@@ -1,0 +1,46 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}Vaccination Card{% endblock %}
+{% block content %}
+  <h2>Vaccination Card</h2>
+  <p><strong>Child:</strong> {{ child.full_name }} &nbsp; <span class="muted">(DOB {{ child.date_of_birth }})</span></p>
+  <p class="muted">Showing all vaccines that should have been given up to today. Future vaccines are hidden.</p>
+
+  <!-- Turn off browser autofill; we'll only save non-empty fields -->
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+
+    <ul class="list">
+      {% for r in rows %}
+      <li>
+        <div>
+          <strong>{{ r.vaccine_name }}</strong>
+          <span class="muted">— {{ r.dose_label }}</span>
+        </div>
+
+        <div style="margin-top:6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          {% if r.editable %}
+            <!-- Show the due date as a hint, not as the input's value -->
+            <span class="muted">Due: {{ r.due_display|date:"Y-m-d" }}</span>
+            <input class="input-pink" type="date" name="dose_{{ r.child_dose.id }}"
+                   max="{{ today|date:'Y-m-d' }}" autocomplete="off">
+            <span class="status">due</span>
+          {% else %}
+            <input class="input-green" type="date"
+                   value="{{ r.child_dose.given_date|date:'Y-m-d' }}"
+                   disabled>
+            <span class="status">given</span>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% if rows %}
+      <div style="margin-top:16px;">
+        <button class="btn">Update</button>
+      </div>
+    {% else %}
+      <div class="muted" style="margin-top:12px;">No vaccines are due as of today for this child.</div>
+    {% endif %}
+  </form>
+{% endblock %}

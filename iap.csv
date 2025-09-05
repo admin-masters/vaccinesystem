@@ -1,0 +1,47 @@
+Time period,Vaccines,Booster Yes/No,Previous Vaccine
+0 days,BCG,No,
+0 days,Hep B1,No,
+0 days,Hep B1,No,
+0 days,OPV,No,
+6 weeks,DTwP /DTaP1 ,No,
+6 weeks,Hib1 ,No,
+6 weeks,IPV1 ,No,
+6 weeks,Hep B2 ,Yes,Hep B1
+6 weeks,PCV 1 ,No,
+6 weeks,Rota1,No,
+10 weeks,DTwP /DTaP2 ,Yes,DTwP /DTaP
+10 weeks,Hib2 ,Yes,Hib 1
+10 weeks,IPV2 ,Yes,IPV 1
+10 weeks,Hep B3 ,Yes,Hep B2
+10 weeks,PCV 2 ,Yes,PCV 1
+10 weeks,Rota2,Yes,Rota1
+14Weeks,DTwP /DTaP3 ,Yes,DTwP /DTaP 2
+14Weeks,Hib3 ,Yes,Hib2
+14Weeks,IPV3 ,Yes,IPV2
+14Weeks,Hep B4 ,Yes,Hep B3
+14Weeks,PCV 3 ,Yes,PCV 2
+14Weeks,Rota3,Yes,Rota2
+6 Months,Influenza1,No,
+7 Months,Influenza 2,Yes,Influenza1
+6 – 9 Months,Typhoid Conjugate Vaccine,No,
+9 Months,"MMR 1 (Mumps, measles, Rubella)",No,
+12 Months,Hepatitis A 1,No,
+12 – 15 Months,PCV Booster,Yes,PCV
+15 Months,MMR 2,Yes,MMR 1
+15 Months,Varicella,No,
+16 – 18 Months,DTwP /DTaP ,No,
+16 – 18 Months,Hib ,No,
+16 – 18 Months,Hib  booster,Yes,Hib 
+16 – 18 Months,IPV  booster,Yes,IPV
+18 – 19 Months,Hepatitis A 2,Yes,Hepatitis A
+18 – 19 Months,Varicella 2,Yes,Varicella
+4 – 6 years,DTwP /DTaP ,No,
+4 – 6 years,IPV ,No,
+4 – 6 years,IPV  boster,Yes,IPV 
+4 – 6 years,MMR 3,Yes,MMR 2
+9 – 15years (Girls),HPV (2 doses),Yes,HPV
+10 – 12 Years,Tdap/ Td,No,
+1 Year,Annual Influenza Vaccine 1,No,
+2 Year,Annual Influenza Vaccine 2,Yes,Annual Influenza Vaccine 1
+3 Year,Annual Influenza Vaccine 3,Yes,Annual Influenza Vaccine 2
+4 Year,Annual Influenza Vaccine 4,Yes,Annual Influenza Vaccine 3
