@@ -9,7 +9,6 @@
     <div class="muted">DOB: {{ c.date_of_birth }}{% if c.state %} • {{ c.state }}{% endif %}</div>
     <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
       <a class="btn" href="{% url 'vaccinations:card' c.id %}">Open Vaccination Card</a>
-      <a class="btn btn-secondary" href="{% url 'vaccinations:card-all' c.id %}">View Full Schedule</a>
     </div>
   </li>
   {% empty %}
