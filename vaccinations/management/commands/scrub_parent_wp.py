@@ -32,3 +32,4 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Updated {updated} parent records"))
 
 
+

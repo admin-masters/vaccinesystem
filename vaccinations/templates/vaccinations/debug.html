@@ -1,0 +1,40 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}Debug Child Doses{% endblock %}
+{% block content %}
+<h2>Debug: All Doses for {{ child.full_name }}</h2>
+<p><strong>Child DOB:</strong> {{ child.date_of_birth }}</p>
+<p><strong>Today:</strong> {{ today }}</p>
+
+<table border="1" style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Vaccine</th>
+      <th>Dose Label</th>
+      <th>Sequence</th>
+      <th>Due Date</th>
+      <th>Given Date</th>
+      <th>Previous Dose ID</th>
+      <th>Previous Dose Label</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for dose in debug_info %}
+    <tr>
+      <td>{{ dose.id }}</td>
+      <td>{{ dose.vaccine }}</td>
+      <td>{{ dose.dose_label }}</td>
+      <td>{{ dose.sequence }}</td>
+      <td>{{ dose.due_date|default:"None" }}</td>
+      <td>{{ dose.given_date|default:"None" }}</td>
+      <td>{{ dose.previous_dose_id|default:"None" }}</td>
+      <td>{{ dose.previous_dose_label|default:"None" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p style="margin-top: 20px;">
+  <a href="{% url 'vaccinations:card' child.id %}">← Back to Card</a>
+</p>
+{% endblock %}

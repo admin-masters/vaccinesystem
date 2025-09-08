@@ -3,13 +3,13 @@ from datetime import date, timedelta
 from django.utils import timezone
 
 def birth_window(dob: date, min_offset_days: int, max_offset_days: int | None):
-    due_date = dob + timedelta(days=min_offset_days + 1)
+    due_date = dob + timedelta(days=min_offset_days )
     due_until_date = None if max_offset_days is None else dob + timedelta(days=max_offset_days)
     return due_date, due_until_date
 
 def booster_window(prev_given: date, booster_min: int, prev_min: int, booster_max: int | None):
     delta_min = booster_min - prev_min
-    due_date = prev_given + timedelta(days=delta_min + 1)
+    due_date = prev_given + timedelta(days=delta_min )
     if booster_max is None:
         return due_date, None
     delta_max = booster_max - prev_min
