@@ -393,3 +393,444 @@ class ChildCardAPI(RetrieveAPIView):
     permission_classes = [AllowAny]
     serializer_class = ChildCardSerializer
     lookup_field = "pk"
+
+# --- Phase 2 views ---
+from django.contrib.auth.decorators import user_passes_test
+from django.utils.decorators import method_decorator
+from django.http import HttpResponseForbidden
+from django.core.files.uploadedfile import UploadedFile
+import csv
+
+from .models import Partner, FieldRepresentative, Doctor, Clinic
+from .forms import (
+    DoctorRegistrationSelfForm, DoctorRegistrationPartnerForm, DoctorClinicProfileForm,
+    AddChildForm, WhatsAppLookupForm
+)
+from .services import send_doctor_portal_link
+
+# ---------- Partner publishing (admin/staff only) ----------
+def staff_required(u): return u.is_active and u.is_staff
+
+@method_decorator(user_passes_test(staff_required), name="dispatch")
+class PartnerCreateUploadView(View):
+    """
+    Single screen for system admin:
+      - create a Partner
+      - (optional) upload field reps CSV with columns: rep_code, full_name
+    """
+    template_name = "vaccinations/partners_create_upload.html"
+
+    def get(self, request):
+        return render(request, self.template_name, {"created": False})
+
+    def post(self, request):
+        name = (request.POST.get("partner_name", "") or "").strip()
+        if not name:
+            messages.error(request, "Partner name is required.")
+            return render(request, self.template_name, {"created": False})
+
+        partner = Partner.new(name)
+        partner.save()
+        created_reps = 0
+
+        f: UploadedFile | None = request.FILES.get("csv_file")
+        if f and f.size:
+            try:
+                decoded = f.read().decode("utf-8-sig").splitlines()
+                reader = csv.DictReader(decoded)
+                for row in reader:
+                    code = (row.get("rep_code") or "").strip()
+                    full_name = (row.get("full_name") or "").strip()
+                    if not code or not full_name:
+                        continue
+                    FieldRepresentative.objects.update_or_create(
+                        partner=partner, rep_code=code,
+                        defaults={"full_name": full_name, "is_active": True}
+                    )
+                    created_reps += 1
+            except Exception as ex:
+                messages.error(request, f"Could not parse CSV: {ex}")
+                return render(request, self.template_name, {"created": False})
+
+        reg_link = request.build_absolute_uri(partner.doctor_registration_link)
+        messages.success(request, f"Partner '{partner.name}' created with {created_reps} field reps.")
+        return render(request, self.template_name, {
+            "created": True,
+            "partner": partner,
+            "registration_link": reg_link,
+        })
+
+# ---------- Doctor registration (self) ----------
+class DoctorRegisterSelfView(View):
+    template_name = "vaccinations/doctor_register.html"
+
+    def get(self, request):
+        return render(request, self.template_name, {"form": DoctorRegistrationSelfForm(), "mode": "self"})
+
+    def post(self, request):
+        form = DoctorRegistrationSelfForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form, "mode": "self"})
+
+        clinic = Clinic.objects.create(
+            name=form.cleaned_data["doctor_name"],
+            address=form.cleaned_data.get("clinic_address",""),
+            phone="",  # optional
+            state=form.cleaned_data["state"],
+            headquarters=form.cleaned_data.get("head_quarters",""),
+            pincode=form.cleaned_data.get("pincode",""),
+            whatsapp_e164=form.cleaned_data.get("clinic_whatsapp",""),
+            receptionist_email=form.cleaned_data.get("receptionist_email",""),
+        )
+        clinic.set_languages(form.cleaned_data.get("preferred_languages", []))
+        clinic.save()
+
+        doctor = Doctor.objects.create(
+            clinic=clinic,
+            full_name=form.cleaned_data["doctor_name"],
+            whatsapp_e164=form.cleaned_data["doctor_whatsapp"],
+            email=form.cleaned_data["doctor_email"],
+            imc_number=form.cleaned_data["imc_number"],
+            photo=form.cleaned_data.get("doctor_photo"),
+        )
+        send_doctor_portal_link(doctor, request)
+        
+        # For self registration, also redirect to WhatsApp
+        import re
+        import urllib.parse
+        from django.urls import reverse
+        
+        # Clean and format phone number
+        doctor_whatsapp = form.cleaned_data["doctor_whatsapp"]
+        phone_number = re.sub(r'[^\d+]', '', doctor_whatsapp)
+        if not phone_number.startswith('+'):
+            if phone_number.startswith('91'):
+                phone_number = '+' + phone_number
+            elif phone_number.startswith('0'):
+                phone_number = '+91' + phone_number[1:]
+            else:
+                phone_number = '+91' + phone_number
+        
+        # Remove + for WhatsApp URL
+        clean_number = phone_number.replace('+', '')
+        
+        # Create WhatsApp URL with pre-filled message including portal link
+        portal_link = request.build_absolute_uri(reverse("vaccinations:doc-home", args=[doctor.portal_token]))
+        message = f"""Hello Dr. {doctor.full_name},
+
+Please find below the link for your personalized vaccination system under the aegis of South Asia Pediatric Association (SAPA).
+
+This system is supported for your clinic by the Serum Institute of India.
+
+You can now send timely vaccination reminders to your patients. You can also keep track of your patient's vaccinations.
+
+Link: {portal_link}"""
+        encoded_message = urllib.parse.quote(message)
+        whatsapp_url = f"https://wa.me/{clean_number}?text={encoded_message}"
+        
+        # Redirect to WhatsApp
+        return redirect(whatsapp_url)
+
+# ---------- Doctor registration (partner link, with field rep) ----------
+class DoctorRegisterPartnerView(View):
+    template_name = "vaccinations/doctor_register.html"
+
+    def dispatch(self, request, token: str, *args, **kwargs):
+        self.partner = Partner.objects.filter(registration_token=token).first()
+        if not self.partner:
+            messages.error(request, "Invalid or expired partner link.")
+            return redirect("vaccinations:home")
+        return super().dispatch(request, token, *args, **kwargs)
+
+    def get(self, request, token: str):
+        form = DoctorRegistrationPartnerForm(partner=self.partner)
+        return render(request, self.template_name, {"form": form, "mode": "partner", "partner": self.partner})
+
+    def post(self, request, token: str):
+        form = DoctorRegistrationPartnerForm(request.POST, request.FILES, partner=self.partner)
+        if not form.is_valid():
+            print(f"Form validation failed: {form.errors}")
+            return render(request, self.template_name, {"form": form, "mode": "partner", "partner": self.partner})
+
+        print("Form is valid, creating doctor...")
+        clinic = Clinic.objects.create(
+            name=form.cleaned_data["doctor_name"],
+            address=form.cleaned_data.get("clinic_address",""),
+            phone="",
+            state=form.cleaned_data["state"],
+            headquarters=form.cleaned_data.get("head_quarters",""),
+            pincode=form.cleaned_data.get("pincode",""),
+            whatsapp_e164=form.cleaned_data.get("clinic_whatsapp",""),
+            receptionist_email=form.cleaned_data.get("receptionist_email",""),
+        )
+        clinic.set_languages(form.cleaned_data.get("preferred_languages", []))
+        clinic.save()
+
+        doctor = Doctor.objects.create(
+            clinic=clinic,
+            full_name=form.cleaned_data["doctor_name"],
+            whatsapp_e164=form.cleaned_data["doctor_whatsapp"],
+            email=form.cleaned_data["doctor_email"],
+            imc_number=form.cleaned_data["imc_number"],
+            photo=form.cleaned_data.get("doctor_photo"),
+            partner=self.partner,
+            field_rep=form.cleaned_data["__field_rep_obj"],
+        )
+        send_doctor_portal_link(doctor, request)
+        
+        # Store the doctor's WhatsApp number before creating new form
+        doctor_whatsapp = form.cleaned_data["doctor_whatsapp"]
+        print(f"Doctor created successfully. WhatsApp: {doctor_whatsapp}")
+        
+        # For partner registration, redirect to WhatsApp immediately
+        import re
+        import urllib.parse
+        from django.urls import reverse
+        
+        # Clean and format phone number
+        phone_number = re.sub(r'[^\d+]', '', doctor_whatsapp)
+        if not phone_number.startswith('+'):
+            if phone_number.startswith('91'):
+                phone_number = '+' + phone_number
+            elif phone_number.startswith('0'):
+                phone_number = '+91' + phone_number[1:]
+            else:
+                phone_number = '+91' + phone_number
+        
+        # Remove + for WhatsApp URL
+        clean_number = phone_number.replace('+', '')
+        
+        # Create WhatsApp URL with pre-filled message including portal link
+        portal_link = request.build_absolute_uri(reverse("vaccinations:doc-home", args=[doctor.portal_token]))
+        message = f"""Hello Dr. {doctor.full_name},
+
+Please find below the link for your personalized vaccination system under the aegis of South Asia Pediatric Association (SAPA).
+
+This system is supported for your clinic by the Serum Institute of India.
+
+You can now send timely vaccination reminders to your patients. You can also keep track of your patient's vaccinations.
+
+Link: {portal_link}"""
+        encoded_message = urllib.parse.quote(message)
+        whatsapp_url = f"https://wa.me/{clean_number}?text={encoded_message}"
+        
+        # Redirect to WhatsApp
+        return redirect(whatsapp_url)
+
+# ---------- Doctor portal (token-based) ----------
+
+class DoctorPortalMixin:
+    doctor: Doctor = None
+
+    def dispatch(self, request, token: str, *args, **kwargs):
+        self.doctor = Doctor.objects.filter(portal_token=token, is_active=True).select_related("clinic").first()
+        if not self.doctor:
+            messages.error(request, "Invalid or inactive portal link.")
+            return redirect("vaccinations:home")
+        request._portal_doctor = self.doctor
+        return super().dispatch(request, token, *args, **kwargs)
+
+class DoctorPortalHomeView(DoctorPortalMixin, View):
+    template_name = "vaccinations/doctor_portal_home.html"
+    def get(self, request, token: str):
+        return render(request, self.template_name, {"doctor": self.doctor})
+
+# Reuse AddChildForm & logic, but force clinic to current doctor's clinic
+class DoctorPortalAddRecordView(DoctorPortalMixin, View):
+    template_name = "vaccinations/add_record.html"
+
+    def get(self, request, token: str):
+        return render(request, self.template_name, {"form": AddChildForm(), "header_home": self.doctor.portal_path})
+
+    def post(self, request, token: str):
+        form = AddChildForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form, "header_home": self.doctor.portal_path})
+        wa = form.cleaned_data["parent_whatsapp"]
+        parents_qs = _equivalent_parents_by_input(wa)  # existing helper
+        if parents_qs.exists():
+            parent = parents_qs.first()
+        else:
+            parent = Parent.objects.create(whatsapp_e164=wa)
+            parents_qs = Parent.objects.filter(pk=parent.pk)
+        child = Child.objects.create(
+            parent=parent,
+            clinic=self.doctor.clinic,   # <-- scope to this clinic
+            full_name=form.cleaned_data["child_name"],
+            sex=form.cleaned_data["gender"],
+            date_of_birth=form.cleaned_data["date_of_birth"],
+            state=form.cleaned_data["state"] or self.doctor.clinic.state,
+        )
+        messages.success(request, "Record added successfully.")
+        # Use doctor-version of the card views:
+        return redirect("vaccinations:doc-card", token=self.doctor.portal_token, child_id=child.id)
+
+# Doctor lookup -> list children in THIS clinic only
+class DoctorPortalUpdateLookupView(DoctorPortalMixin, View):
+    template_name = "vaccinations/doctor_update_lookup.html"
+
+    def get(self, request, token: str):
+        return render(request, self.template_name, {"form": WhatsAppLookupForm(), "doctor": self.doctor})
+
+    def post(self, request, token: str):
+        form = WhatsAppLookupForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form, "doctor": self.doctor})
+        wa = form.cleaned_data["parent_whatsapp"]
+        parents_qs = _equivalent_parents_by_input(wa)
+        child_qs = Child.objects.filter(
+            parent_id__in=list(parents_qs.values_list("id", flat=True)),
+            clinic=self.doctor.clinic,
+        )
+        children = list(child_qs.order_by("full_name", "date_of_birth"))
+        return render(request, "vaccinations/doctor_select_child.html", {"doctor": self.doctor, "children": children})
+
+# Card views (doctor-scoped authorization)
+class DoctorPortalCardDueView(DoctorPortalMixin, View):
+    def get_child(self, child_id: int) -> Child | None:
+        child = get_object_or_404(Child, pk=child_id)
+        if child.clinic_id != self.doctor.clinic_id:
+            messages.error(self.request, "This record is not part of your clinic.")
+            return None
+        return child
+
+    def get(self, request, token: str, child_id: int):
+        child = self.get_child(child_id)
+        if not child: return redirect("vaccinations:doc-update", token=self.doctor.portal_token)
+        t = today()
+        cds_all = list(child.doses.select_related("dose__vaccine", "dose__previous_dose"))
+        rows = _compute_ui_state(child, cds_all, show_all=False, newly_anchored_ids=set())
+        return render(request, "vaccinations/card.html", {"child": child, "rows": rows, "today": t, "show_all": False})
+
+    def post(self, request, token: str, child_id: int):
+        child = self.get_child(child_id)
+        if not child: return redirect("vaccinations:doc-update", token=self.doctor.portal_token)
+        t = today()
+        editable_qs = (child.doses
+            .filter(due_date__isnull=False, due_date__lte=t, given_date__isnull=True)
+            .select_related("dose__vaccine"))
+        changed = 0
+        changed_bases: List[ChildDose] = []
+        for cd in editable_qs:
+            raw = (request.POST.get(f"dose_{cd.id}", "") or "").strip()
+            if not raw: continue
+            try:
+                given = date.fromisoformat(raw)
+            except Exception:
+                messages.error(request, f"Invalid date for {cd.dose.dose_label}.")
+                continue
+            if given > t:
+                messages.error(request, f"{cd.dose.dose_label} cannot be a future date.")
+                continue
+            cd.given_date = given
+            cd.save(update_fields=["given_date", "updated_at"])
+            changed += 1
+            changed_bases.append(cd)
+        newly_anchored = reanchor_dependents(child, changed_bases)
+        if newly_anchored:
+            txt = "; ".join([f"{x.dose.vaccine.name} — {x.dose.dose_label}: {x.due_date}" for x in newly_anchored])
+            messages.success(request, f"Updated. Newly anchored next doses: {txt}")
+        elif changed:
+            messages.success(request, "Vaccination record updated.")
+        else:
+            messages.info(request, "No changes were made.")
+        return redirect("vaccinations:doc-card", token=self.doctor.portal_token, child_id=child.id)
+
+class DoctorPortalCardAllView(DoctorPortalMixin, View):
+    def get_child(self, child_id: int) -> Child | None:
+        child = get_object_or_404(Child, pk=child_id)
+        if child.clinic_id != self.doctor.clinic_id:
+            messages.error(self.request, "This record is not part of your clinic.")
+            return None
+        return child
+
+    def get(self, request, token: str, child_id: int):
+        child = self.get_child(child_id)
+        if not child: return redirect("vaccinations:doc-update", token=self.doctor.portal_token)
+        cds = list(child.doses.select_related("dose__vaccine", "dose__previous_dose"))
+        rows = _compute_ui_state(child, cds, show_all=True)
+        return render(request, "vaccinations/card.html", {"child": child, "rows": rows, "today": today(), "show_all": True})
+
+    def post(self, request, token: str, child_id: int):
+        # identical to DoctorPortalCardDueView.post but redirect back to card-all
+        child = self.get_child(child_id)
+        if not child: return redirect("vaccinations:doc-update", token=self.doctor.portal_token)
+        t = today()
+        editable_qs = (child.doses
+            .filter(due_date__isnull=False, due_date__lte=t, given_date__isnull=True)
+            .select_related("dose__vaccine"))
+        changed = 0
+        changed_bases: List[ChildDose] = []
+        for cd in editable_qs:
+            raw = (request.POST.get(f"dose_{cd.id}", "") or "").strip()
+            if not raw: continue
+            try:
+                given = date.fromisoformat(raw)
+            except Exception:
+                messages.error(request, f"Invalid date for {cd.dose.dose_label}.")
+                continue
+            if given > t:
+                messages.error(request, f"{cd.dose.dose_label} cannot be a future date.")
+                continue
+            cd.given_date = given
+            cd.save(update_fields=["given_date", "updated_at"])
+            changed += 1
+            changed_bases.append(cd)
+        newly_anchored = reanchor_dependents(child, changed_bases)
+        if newly_anchored:
+            txt = "; ".join([f"{x.dose.vaccine.name} — {x.dose.dose_label}: {x.due_date}" for x in newly_anchored])
+            messages.success(request, f"Updated. Newly anchored next doses: {txt}")
+        elif changed:
+            messages.success(request, "Vaccination record updated.")
+        else:
+            messages.info(request, "No changes were made.")
+        return redirect("vaccinations:doc-card-all", token=self.doctor.portal_token, child_id=child.id)
+
+# Profile edit
+class DoctorPortalEditProfileView(DoctorPortalMixin, View):
+    template_name = "vaccinations/doctor_profile.html"
+
+    def get(self, request, token: str):
+        c = self.doctor.clinic
+        initial = {
+            "doctor_name": self.doctor.full_name,
+            "doctor_whatsapp": self.doctor.whatsapp_e164,
+            "clinic_whatsapp": c.whatsapp_e164,
+            "state": c.state,
+            "head_quarters": c.headquarters,
+            "clinic_address": c.address,
+            "preferred_languages": c.get_languages(),
+            "pincode": c.pincode,
+            "doctor_email": self.doctor.email,
+            "receptionist_email": c.receptionist_email,
+            "imc_number": self.doctor.imc_number,
+        }
+        return render(request, self.template_name, {
+            "form": DoctorClinicProfileForm(initial=initial),
+            "doctor": self.doctor
+        })
+
+    def post(self, request, token: str):
+        form = DoctorClinicProfileForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form, "doctor": self.doctor})
+        # update clinic
+        c = self.doctor.clinic
+        c.state = form.cleaned_data["state"]
+        c.headquarters = form.cleaned_data.get("head_quarters","")
+        c.address = form.cleaned_data.get("clinic_address","")
+        c.set_languages(form.cleaned_data.get("preferred_languages", []))
+        c.pincode = form.cleaned_data.get("pincode","")
+        c.whatsapp_e164 = form.cleaned_data.get("clinic_whatsapp","")
+        c.receptionist_email = form.cleaned_data.get("receptionist_email","")
+        c.save()
+        # update doctor
+        self.doctor.full_name = form.cleaned_data["doctor_name"]
+        self.doctor.whatsapp_e164 = form.cleaned_data["doctor_whatsapp"]
+        self.doctor.email = form.cleaned_data["doctor_email"]
+        self.doctor.imc_number = form.cleaned_data["imc_number"]
+        if form.cleaned_data.get("doctor_photo"):
+            self.doctor.photo = form.cleaned_data["doctor_photo"]
+        self.doctor.save()
+        messages.success(request, "Profile updated.")
+        return redirect("vaccinations:doc-home", token=self.doctor.portal_token)

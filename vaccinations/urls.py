@@ -4,6 +4,10 @@ from .views import (
     HomeView, AddRecordView, UpdateLookupView,
     VaccinationCardDueView, VaccinationCardAllView,
     ChildCardAPI,
+    PartnerCreateUploadView,
+    DoctorRegisterSelfView, DoctorRegisterPartnerView,
+    DoctorPortalHomeView, DoctorPortalAddRecordView, DoctorPortalUpdateLookupView,
+    DoctorPortalCardDueView, DoctorPortalCardAllView, DoctorPortalEditProfileView,
 )
 
 app_name = "vaccinations"
@@ -21,4 +25,17 @@ urlpatterns = [
 
     # Optional API
     path("api/children/<int:pk>/card/", ChildCardAPI.as_view(), name="card-api"),
+
+    # Admin publishing
+    path("partners/new/", PartnerCreateUploadView.as_view(), name="partner-create"),
+    # Doctor registration
+    path("doctor/register/", DoctorRegisterSelfView.as_view(), name="doctor-register-self"),
+    path("doctor/register/<str:token>/", DoctorRegisterPartnerView.as_view(), name="doctor-register-partner"),
+    # Doctor portal (token)
+    path("d/<str:token>/", DoctorPortalHomeView.as_view(), name="doc-home"),
+    path("d/<str:token>/add/", DoctorPortalAddRecordView.as_view(), name="doc-add"),
+    path("d/<str:token>/update/", DoctorPortalUpdateLookupView.as_view(), name="doc-update"),
+    path("d/<str:token>/card/<int:child_id>/", DoctorPortalCardDueView.as_view(), name="doc-card"),
+    path("d/<str:token>/card-all/<int:child_id>/", DoctorPortalCardAllView.as_view(), name="doc-card-all"),
+    path("d/<str:token>/profile/", DoctorPortalEditProfileView.as_view(), name="doc-profile"),
 ]

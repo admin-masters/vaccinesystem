@@ -98,4 +98,47 @@ def reanchor_dependents(child: Child, bases: Iterable[ChildDose]) -> List[ChildD
     return updated
 
 
+# --- Phase 2: doctor portal helpers (append at end) ---
+from django.urls import reverse
+from .utils import normalize_msisdn
+
+def build_doctor_portal_url(request, doctor):
+    path = reverse("vaccinations:doc-home", args=[doctor.portal_token])
+    return request.build_absolute_uri(path) if request else path
+
+def send_whatsapp(to_e164: str, message: str) -> None:
+    """
+    Send WhatsApp message using WhatsApp Web API.
+    This opens WhatsApp Web with pre-filled message.
+    """
+    # Remove + from phone number for WhatsApp URL
+    clean_number = to_e164.replace('+', '')
+    
+    # URL encode the message
+    import urllib.parse
+    encoded_message = urllib.parse.quote(message)
+    
+    # Create WhatsApp Web URL
+    whatsapp_url = f"https://web.whatsapp.com/send?phone={clean_number}&text={encoded_message}"
+    
+    print(f"[WA] to={to_e164} :: {message}")
+    print(f"[WA] URL: {whatsapp_url}")
+    
+    # Note: This is a stub - in production, you would use a proper WhatsApp Business API
+    # For now, this just logs the URL that would be used to send the message
+
+def send_doctor_portal_link(doctor, request=None) -> None:
+    link = build_doctor_portal_url(request, doctor)
+    msg = f"""Hello Dr. {doctor.full_name},
+
+Please find below the link for your personalized vaccination system under the aegis of South Asia Pediatric Association (SAPA).
+
+This system is supported for your clinic by the Serum Institute of India.
+
+You can now send timely vaccination reminders to your patients. You can also keep track of your patient's vaccinations.
+
+Link: {link}"""
+    to = normalize_msisdn(doctor.whatsapp_e164)
+    send_whatsapp(to, msg)
+
 
