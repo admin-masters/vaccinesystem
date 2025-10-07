@@ -1,0 +1,31 @@
+{# inputs: row (has status_key, child_dose, etc.), ui (localized labels) #}
+{% load tz %}
+
+{% with cd=row.child_dose %}
+  {% if row.status_key == 'given' %}
+    <span class="vh-badge vh-badge--ok">
+      {{ ui.given_on }} : {{ cd.given_date|date:"d M Y" }}
+    </span>
+
+  {% elif row.status_key == 'overdue' %}
+    <span class="vh-badge vh-badge--overdue">
+      {{ ui.due_on }} : {{ cd.due_date|date:"d M Y" }}
+    </span>
+
+  {% elif row.status_key == 'due' %}
+    <span class="vh-badge vh-badge--due">
+      {{ ui.due_on }} : {{ cd.due_date|date:"d M Y" }}
+    </span>
+
+  {% elif row.status_key == 'future' %}
+    <span class="vh-badge vh-badge--future">
+      {{ ui.due_on }} : {{ cd.due_date|date:"d M Y" }}
+    </span>
+
+  {% else %}
+    {# waiting for previous dose or unanchored -> locked #}
+    <span class="vh-badge vh-badge--locked">
+      {{ ui.badge_locked }}
+    </span>
+  {% endif %}
+{% endwith %}

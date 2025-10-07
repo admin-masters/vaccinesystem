@@ -1,0 +1,18 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}Select Child{% endblock %}
+{% block content %}
+<h2>Select Child</h2>
+<ul class="list">
+  {% for c in children %}
+  <li>
+    <div><strong>{{ c.full_name }}</strong></div>
+    <div class="muted">DOB: {{ c.date_of_birth }}{% if c.state %} • {{ c.state }}{% endif %}</div>
+    <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+      <a class="btn" href="{% url 'vaccinations:card' c.id %}">Open Vaccination Card</a>
+    </div>
+  </li>
+  {% empty %}
+  <li>No children found for this parent.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

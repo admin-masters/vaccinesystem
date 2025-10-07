@@ -1,0 +1,30 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+  <h2 style="margin-bottom:6px">{{ vaccine.name }}</h2>
+  <p class="muted">{{ lead }}</p>
+  {% if videos %}
+    <div style="display:flex; flex-direction:column; gap:24px">
+      {% for v in videos %}
+        <div style="border:1px solid #eee; border-radius:10px; padding:12px">
+          <div style="font-weight:600">{{ v.title|default:v.language|upper }}</div>
+          {% if "youtube" in v.video_url %}
+            {% with v.video_url|cut:"https://youtu.be/" as short %}
+            {% with v.video_url|cut:"https://www.youtube.com/watch?v=" as long %}
+              <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; margin-top:8px">
+                <iframe src="https://www.youtube.com/embed/{{ long|default:short }}"
+                        frameborder="0" allowfullscreen
+                        style="position:absolute; top:0; left:0; width:100%; height:100%"></iframe>
+              </div>
+            {% endwith %}{% endwith %}
+          {% else %}
+            <p><a class="btn" href="{{ v.video_url }}" target="_blank">Open video</a></p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">No videos are available for this vaccine yet.</p>
+  {% endif %}
+  <p style="margin-top:16px"><a class="btn" href="javascript:history.back()">← Back</a></p>
+{% endblock %}

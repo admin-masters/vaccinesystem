@@ -1,0 +1,33 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}Doctor Portal{% endblock %}
+{% block content %}
+<h2>Welcome, Dr. {{ doctor.full_name }}</h2>
+<p class="muted">{{ doctor.clinic.name }}{% if doctor.clinic.state %} • {{ doctor.clinic.state }}{% endif %}</p>
+
+{% if doctor.photo %}
+  <div style="margin:15px 0;">
+    <img src="{{ doctor.photo.url }}" alt="Doctor photo"
+         style="max-width:140px;border-radius:6px;border:1px solid #eee" />
+  </div>
+{% endif %}
+
+<div class="grid-2" style="margin-top:18px;">
+  <a class="btn btn-block" href="{% url 'vaccinations:doc-add' doctor.portal_token %}">Add-a-patient</a>
+  <a class="btn btn-block" href="{% url 'vaccinations:doc-update' doctor.portal_token %}">Update a patient record</a>
+</div>
+
+<div style="margin-top:18px;">
+  <a class="btn btn-block" href="{% url 'vaccinations:doc-reminders' doctor.portal_token %}">Reminders</a>
+</div>
+
+<div style="margin-top:18px;">
+  <a class="btn btn-block" href="{% url 'vaccinations:doc-profile' doctor.portal_token %}">Edit doctor/clinic profile</a>
+</div>
+
+<div style="margin-top:18px;">
+  <form method="post" action="{% url 'vaccinations:doc-logout' doctor.portal_token %}" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-secondary btn-block">Logout</button>
+  </form>
+</div>
+{% endblock %}

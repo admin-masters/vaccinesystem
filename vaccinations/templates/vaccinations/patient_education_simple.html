@@ -1,0 +1,40 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}{{ vaccine.name }} — Patient Education{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:8px">{{ vaccine.name }}</h2>
+<p class="muted" style="margin-top:-4px">Select your preferred language.</p>
+
+{% if videos_by_lang %}
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin:12px 0">
+  {% for lang, videos in videos_by_lang.items %}
+  <a href="#lang-{{ lang }}" class="btn" style="padding:6px 10px;">{{ lang|upper }}</a>
+  {% endfor %}
+</div>
+
+{% for lang, videos in videos_by_lang.items %}
+<div id="lang-{{ lang }}" style="margin:14px 0 24px;">
+  <h3 style="margin-bottom:8px">{{ lang|upper }}</h3>
+  {% for video in videos %}
+  {% if "youtube" in video.video_url %}
+  {% with video.video_url|cut:"https://youtu.be/" as short %}
+  {% with video.video_url|cut:"https://www.youtube.com/watch?v=" as long %}
+  <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px;">
+    <iframe src="https://www.youtube.com/embed/{{ long|default:short }}" frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+      style="position:absolute; top:0; left:0; width:100%; height:100%"></iframe>
+  </div>
+  <p style="margin-top:8px">
+    <a class="muted" href="{{ video.video_url }}" target="_blank" rel="noopener">Open in YouTube</a>
+  </p>
+  {% endwith %}{% endwith %}
+  {% else %}
+  <p><a class="btn" href="{{ video.video_url }}" target="_blank">Open video</a></p>
+  {% endif %}
+  {% endfor %}
+  <hr>
+</div>
+{% endfor %}
+{% else %}
+<p class="muted">Education video is currently unavailable for this vaccine.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "vaccinations/base.html" %}
+{% block title %}Sign-in error{% endblock %}
+{% block content %}
+<h2>Sign-in error</h2>
+<p class="muted">{{ message }}</p>
+{% if expected and actual %}
+<p class="muted">Registered Gmail: <strong>{{ expected }}</strong><br>Signed in as: <strong>{{ actual }}</strong></p>
+{% endif %}
+<p style="margin-top:16px">
+  <a class="btn" href="{{ request.META.HTTP_REFERER|default:'/' }}">Try again</a>
+</p>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

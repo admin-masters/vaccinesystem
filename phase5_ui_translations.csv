@@ -1,0 +1,145 @@
+﻿key,description,language,text
+history.title,Page title,en,Vaccination History
+history.title,Page title,hi,टीकाकरण इतिहास
+history.title,Page title,bn,টিকাদান ইতিহাস
+history.title,Page title,ml,വാക്സിനേഷൻ ചരിത്രം
+history.title,Page title,ta,தடுப்பூசி வரலாறு
+history.title,Page title,te,వ్యాక్సినేషన్ చరిత్ర
+history.title,Page title,mr,लसीकरण इतिहास
+history.title,Page title,kn,ಲಸಿಕೆ ಇತಿಹಾಸ
+history.note,Top note,en,"If this is your first visit, click ""Update Due Date"" to enter the doses already given. Once done, only pending vaccines will remain."
+history.note,Top note,hi,"यदि यह आपकी पहली यात्रा है, तो पहले से दी गई खुराक दर्ज करने के लिए ""नियत तारीख अपडेट करें"" पर क्लिक करें। एक बार हो जाने पर, केवल लंबित टीके ही रह जाएंगे।"
+history.note,Top note,bn,"এটি যদি আপনার প্রথম ভিজিট হয়, তাহলে ইতিমধ্যে দেওয়া ডোজগুলি প্রবেশ করতে ""নির্ধারিত তারিখ আপডেট করুন"" ক্লিক করুন। একবার সম্পন্ন হলে, শুধুমাত্র বাকি টিকাগুলি থাকবে।"
+history.note,Top note,ml,"ഇത് നിങ്ങളുടെ ആദ്യ സന്ദർശനമാണെങ്കിൽ, ഇതിനകം നൽകിയ ഡോസുകൾ എൻട്രി ചെയ്യാൻ ""നിശ്ചിത തീയതി അപ്ഡേറ്റ് ചെയ്യുക"" ക്ലിക്ക് ചെയ്യുക. പൂർത്തിയായാൽ, ബാക്കിയുള്ള വാക്സിനുകൾ മാത്രം അവശേഷിക്കും।"
+history.note,Top note,ta,"இது உங்கள் முதல் வருகையாக இருந்தால், ஏற்கனவே கொடுக்கப்பட்ட டோஸ்களை உள்ளிட ""நிர்धாரित தேதியை புதுப்பிக்கவும்"" என்பதை கிளிக் செய்யவும். முடிந்ததும், நிலுவையில் உள்ள தடுப்பூசிகள் மட்டுமே இருக்கும்।"
+history.note,Top note,te,"ఇది మీ మొదటి సందర్శన అయితే, ఇప్పటికే ఇచ్చిన డోస్‌లను ఎంటర్ చేయడానికి ""నిర్ధారిత తేదీని అప్‌డేట్ చేయండి"" క్లిక్ చేయండి. పూర్తయిన తర్వాత, పెండింగ్‌లో ఉన్న వ్యాక్సిన్‌లు మాత్రమే మిగిలిపోతాయి।"
+history.note,Top note,mr,"जर ही तुमची पहिली भेट असेल, तर आधीच दिलेले डोस एंटर करण्यासाठी ""निर्धारित तारीख अपडेट करा"" वर क्लिक करा. पूर्ण झाल्यावर, फक्त प्रलंबित लसी राहतील।"
+history.note,Top note,kn,"ಇದು ನಿಮ್ಮ ಮೊದಲ ಭೇಟಿಯಾಗಿದ್ದರೆ, ಈಗಾಗಲೇ ನೀಡಿದ ಡೋಸ್‌ಗಳನ್ನು ನಮೂದಿಸಲು ""ನಿರ್ಧಾರಿತ ದಿನಾಂಕವನ್ನು ಅಪ್‌ಡೇಟ್ ಮಾಡಿ"" ಕ್ಲಿಕ್ ಮಾಡಿ. ಪೂರ್ಣಗೊಂಡ ನಂತರ, ಬಾಕಿ ಇರುವ ಲಸಿಕೆಗಳು ಮಾತ್ರ ಉಳಿಯುತ್ತವೆ।"
+btn.update_due,Update button,en,Update Due Date
+btn.update_due,Update button,hi,नियत तारीख अपडेट करें
+btn.update_due,Update button,bn,নির্ধারিত তারিখ আপডেট করুন
+btn.update_due,Update button,ml,നിശ്ചിത തീയതി അപ്ഡേറ്റ് ചെയ്യുക
+btn.update_due,Update button,ta,நிர்ধாரित தேதியை புதுப்பிக்கவும்
+btn.update_due,Update button,te,నిర్ధారిత తేదీని అప్‌డేట్ చేయండి
+btn.update_due,Update button,mr,निर्धारित तारीख अपडेट करा
+btn.update_due,Update button,kn,ನಿರ್ಧಾರಿತ ದಿನಾಂಕವನ್ನು ಅಪ್‌ಡೇಟ್ ಮಾಡಿ
+btn.add_child,Add child button,en,Add Another Child
+btn.add_child,Add child button,hi,दूसरा बच्चा जोड़ें
+btn.add_child,Add child button,bn,আরেকটি শিশু যোগ করুন
+btn.add_child,Add child button,ml,മറ്റൊരു കുട്ടിയെ ചേർക്കുക
+btn.add_child,Add child button,ta,மற்றொரு குழந்தையை சேர்க்கவும்
+btn.add_child,Add child button,te,మరొక పిల్లవాడిని జోడించండి
+btn.add_child,Add child button,mr,दुसरे मूल जोडा
+btn.add_child,Add child button,kn,ಮತ್ತೊಂದು ಮಗುವನ್ನು ಸೇರಿಸಿ
+btn.back,Back button,en,Go Back
+btn.back,Back button,hi,वापस जाएं
+btn.back,Back button,bn,ফিরে যান
+btn.back,Back button,ml,തിരികെ പോകുക
+btn.back,Back button,ta,திரும்பிச் செல்லவும்
+btn.back,Back button,te,వెనుకకు వెళ్ళండి
+btn.back,Back button,mr,परत जा
+btn.back,Back button,kn,ಹಿಂದೆ ಹೋಗಿ
+th.vaccine,Table header,en,Vaccine
+th.vaccine,Table header,hi,टीका
+th.vaccine,Table header,bn,টিকা
+th.vaccine,Table header,ml,വാക്സിൻ
+th.vaccine,Table header,ta,தடுப்பூசி
+th.vaccine,Table header,te,వ్యాక్సిన్
+th.vaccine,Table header,mr,लस
+th.vaccine,Table header,kn,ಲಸಿಕೆ
+th.status,Table header,en,Status
+th.status,Table header,hi,स्थिति
+th.status,Table header,bn,অবস্থা
+th.status,Table header,ml,നില
+th.status,Table header,ta,நிலை
+th.status,Table header,te,స్థితి
+th.status,Table header,mr,स्थिती
+th.status,Table header,kn,ಸ್ಥಿತಿ
+th.action,Table header,en,Action
+th.action,Table header,hi,कार्य
+th.action,Table header,bn,কর্ম
+th.action,Table header,ml,പ്രവർത്തനം
+th.action,Table header,ta,செயல்
+th.action,Table header,te,చర్య
+th.action,Table header,mr,कृती
+th.action,Table header,kn,ಕ್ರಿಯೆ
+btn.call_clinic,Call button,en,Call Clinic
+btn.call_clinic,Call button,hi,क्लिनिक को कॉल करें
+btn.call_clinic,Call button,bn,ক্লিনিকে কল করুন
+btn.call_clinic,Call button,ml,ക്ലിനിക്കിൽ വിളിക്കുക
+btn.call_clinic,Call button,ta,மருத்துவமனையை அழைக்கவும்
+btn.call_clinic,Call button,te,క్లినిక్‌కు కాల్ చేయండి
+btn.call_clinic,Call button,mr,क्लिनिकला कॉल करा
+btn.call_clinic,Call button,kn,ಕ್ಲಿನಿಕ್‌ಗೆ ಕರೆ ಮಾಡಿ
+lbl.given_on,Given label,en,Given on
+lbl.given_on,Given label,hi,दिया गया
+lbl.given_on,Given label,bn,দেওয়া হয়েছে
+lbl.given_on,Given label,ml,നൽകിയത്
+lbl.given_on,Given label,ta,கொடுக்கப்பட்டது
+lbl.given_on,Given label,te,ఇవ్వబడింది
+lbl.given_on,Given label,mr,दिले गेले
+lbl.given_on,Given label,kn,ನೀಡಲಾಗಿದೆ
+lbl.due_on,Due label,en,Due on
+lbl.due_on,Due label,hi,देय तिथि
+lbl.due_on,Due label,bn,নির্ধারিত তারিখ
+lbl.due_on,Due label,ml,നിശ്ചിത തീയതി
+lbl.due_on,Due label,ta,நிர்ধாரித்த தேதி
+lbl.due_on,Due label,te,నిర్ధారిత తేదీ
+lbl.due_on,Due label,mr,निर्धारित तारीख
+lbl.due_on,Due label,kn,ನಿರ್ಧಾರಿತ ದಿನಾಂಕ
+status.given,Status given,en,Given
+status.given,Status given,hi,दी गई
+status.given,Status given,bn,দেওয়া হয়েছে
+status.given,Status given,ml,നൽകി
+status.given,Status given,ta,கொடுக்கப்பட்டது
+status.given,Status given,te,ఇవ్వబడింది
+status.given,Status given,mr,दिली
+status.given,Status given,kn,ನೀಡಲಾಗಿದೆ
+status.pending,Status pending,en,Pending
+status.pending,Status pending,hi,लंबित
+status.pending,Status pending,bn,বিলম্বিত
+status.pending,Status pending,ml,ബാക്കിയുണ്ട്
+status.pending,Status pending,ta,நிலுவையில்
+status.pending,Status pending,te,పెండింగ్‌లో
+status.pending,Status pending,mr,प्रलंबित
+status.pending,Status pending,kn,ಬಾಕಿ ಇದೆ
+edu.title,Education title,en,Education
+edu.title,Education title,hi,शिक्षा
+edu.title,Education title,bn,শিক্ষা
+edu.title,Education title,ml,വിദ്യാഭ്യാസം
+edu.title,Education title,ta,கல்வி
+edu.title,Education title,te,విద్య
+edu.title,Education title,mr,शिक्षण
+edu.title,Education title,kn,ಶಿಕ್ಷಣ
+edu.lead,Education lead,en,Watch the short video(s) below to learn why this vaccine is important.
+edu.lead,Education lead,hi,इस टीके का महत्व जानने के लिए नीचे दिए गए छोटे वीडियो देखें।
+edu.lead,Education lead,bn,এই টিকা কেন গুরুত্বপূর্ণ তা জানতে নিচের ছোট ভিডিও(গুলি) দেখুন।
+edu.lead,Education lead,ml,ഈ വാക്സിൻ എന്തുകൊണ്ട് പ്രധാനമാണെന്ന് അറിയാൻ താഴെയുള്ള ചെറിയ വീഡിയോ(കൾ) കാണുക।
+edu.lead,Education lead,ta,இந்த தடுப்பூசி ஏன் முக்கியம் என்பதை அறிய கீழே உள்ள சிறிய வீடியோ(க்களை) பார்க்கவும்।
+edu.lead,Education lead,te,ఈ వ్యాక్సిన్ ఎందుకు ముఖ్యమో తెలుసుకోవడానికి క్రింద ఉన్న చిన్న వీడియో(లను) చూడండి।
+edu.lead,Education lead,mr,ही लस का महत्वाची आहे हे जाणून घेण्यासाठी खालील छोटे व्हिडिओ पहा।
+edu.lead,Education lead,kn,ಈ ಲಸಿಕೆ ಏಕೆ ಮುಖ್ಯವಾಗಿದೆ ಎಂಬುದನ್ನು ತಿಳಿಯಲು ಕೆಳಗಿನ ಚಿಕ್ಕ ವೀಡಿಯೋ(ಗಳನ್ನು) ನೋಡಿ।
+csv.child_name,CSV header,en,Child Name
+csv.child_name,CSV header,hi,बच्चे का नाम
+csv.child_name,CSV header,bn,শিশুর নাম
+csv.child_name,CSV header,ml,കുട്ടിയുടെ പേര്
+csv.child_name,CSV header,ta,குழந்தையின் பெயர்
+csv.child_name,CSV header,te,పిల్లవాడి పేరు
+csv.child_name,CSV header,mr,मुलाचे नाव
+csv.child_name,CSV header,kn,ಮಗುವಿನ ಹೆಸರು
+csv.date_of_birth,CSV header,en,Date of Birth
+csv.date_of_birth,CSV header,hi,जन्म तिथि
+csv.date_of_birth,CSV header,bn,জন্ম তারিখ
+csv.date_of_birth,CSV header,ml,ജനനത്തീയതി
+csv.date_of_birth,CSV header,ta,பிறந்த தேதி
+csv.date_of_birth,CSV header,te,పుట్టిన తేదీ
+csv.date_of_birth,CSV header,mr,जन्म तारीख
+csv.date_of_birth,CSV header,kn,ಹುಟ್ಟಿದ ದಿನಾಂಕ
+csv.gender,CSV header,en,Gender
+csv.gender,CSV header,hi,लिंग
+csv.gender,CSV header,bn,লিঙ্গ
+csv.gender,CSV header,ml,ലിംഗം
+csv.gender,CSV header,ta,பாலினம்
+csv.gender,CSV header,te,లింగం
+csv.gender,CSV header,mr,लिंग
+csv.gender,CSV header,kn,ಲಿಂಗ
