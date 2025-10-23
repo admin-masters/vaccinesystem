@@ -35,8 +35,8 @@ SECRET_KEY = 'django-insecure-7r1gry17%^l63tjrxwl&8&@7ccl#vagkax(-k)y=z-(#e(pv-@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]  # dev
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "newvaccine.cpdinclinic.co.in",]  # dev
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000", "http://newvaccine.cpdinclinic.co.in",]
 
 
 # Application definition
@@ -89,9 +89,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'clinic_db',       # your database name
-        'USER': 'root',             # your MySQL username
-        'PASSWORD': 'Bhartidhote123@#', # your MySQL password
-        'HOST': 'localhost',        # or 127.0.0.1
+        'USER': 'clinic_user',    # your MySQL username
+        'PASSWORD': 'Hfd4U12R^E^&Y*Vy', # your MySQL password
+        'HOST': '65.0.103.152',        # or 127.0.0.1
         'PORT': '3306',
     },
     'masters': {
@@ -155,7 +155,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # MEDIA (for doctor photo upload)
-MEDIA_URL = "/media/"
 
 # Session configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
