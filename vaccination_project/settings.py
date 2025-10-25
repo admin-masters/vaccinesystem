@@ -169,7 +169,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # Keep cookies sent on the top-level Google redirect back to your app.
 SESSION_COOKIE_SAMESITE = "Lax"   # default is already Lax, make it explicit
-SESSION_COOKIE_SECURE = False     # dev only
+SESSION_COOKIE_SECURE = True     # dev only
 LOGIN_URL = "/auth/google/start/"
 
 # ---- Google OAuth (read secrets from .env file only) ----
