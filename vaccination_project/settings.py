@@ -33,10 +33,13 @@ if isinstance(PATIENT_DATA_FERNET_KEY, str):
 SECRET_KEY = 'django-insecure-7r1gry17%^l63tjrxwl&8&@7ccl#vagkax(-k)y=z-(#e(pv-@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "newvaccine.cpdinclinic.co.in",]  # dev
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000", "http://newvaccine.cpdinclinic.co.in",]
+CSRF_TRUSTED_ORIGINS = [
+    "http://newvaccine.cpdinclinic.co.in",
+    "https://newvaccine.cpdinclinic.co.in"
+]
 
 
 # Application definition
