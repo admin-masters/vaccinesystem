@@ -1,10 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ lang|default:'en' }}">
 
 <head>
+  {% load static %}
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="{{ lang|default:'en' }}" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Vaccination Card{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'vaccinations/base.css' %}">
+  {% block page_css %}{% endblock %}
+
   <style>
     :root {
       --primary: #8b5cf6;
@@ -160,9 +166,9 @@
   <header><a href="{% url 'vaccinations:home' %}">← Home</a></header>
   <main>
     {% if messages %}
-    {% for m in messages %}
-    <div class="msg {% if m.tags %}msg-{{ m.tags }}{% endif %}">{{ m }}</div>
-    {% endfor %}
+      {% for m in messages %}
+        <div class="msg {% if m.tags %}msg-{{ m.tags }}{% endif %}">{{ m }}</div>
+      {% endfor %}
     {% endif %}
     {% block content %}{% endblock %}
   </main>

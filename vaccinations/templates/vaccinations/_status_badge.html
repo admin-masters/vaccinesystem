@@ -1,6 +1,4 @@
-{# inputs: row (has status_key, child_dose, etc.), ui (localized labels) #}
 {% load tz %}
-
 {% with cd=row.child_dose %}
   {% if row.status_key == 'given' %}
     <span class="vh-badge vh-badge--ok">
@@ -23,7 +21,6 @@
     </span>
 
   {% else %}
-    {# waiting for previous dose or unanchored -> locked #}
     <span class="vh-badge vh-badge--locked">
       {{ ui.badge_locked }}
     </span>

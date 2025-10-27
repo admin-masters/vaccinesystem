@@ -505,8 +505,9 @@ class VaccinationHistoryView(View):
             Child.objects.using("patients")
             .select_related("parent")
             .prefetch_related(
-                Prefetch("clinic", queryset=Clinic.objects.using("default").only("id","name","state","phone"))
+                Prefetch("clinic", queryset=Clinic.objects.using("masters").only("id","name","state","phone"))
             ),
+
             pk=child_id
         )
         allowed_ids = request.session.get(SESSION_PARENT_IDS, [parent.id])
@@ -1959,10 +1960,9 @@ class PatientEducationView(View):
     Shows Patient Education videos for a vaccine in all available languages.
     Used by reminder messages to provide comprehensive education content.
     """
-    template_name = "vaccinations/patient_education_simple.html"
+    template_name = "vaccinations/parent_education_simple.html"
 
     def get(self, request, vaccine_id: int):
-        # Mapping from dose-specific vaccines (default DB) to generic vaccines (masters DB)
         vaccine_mapping = {
             'bcg': 'bcg', 'hep_b1': 'hep-b', 'hep_b2': 'hep-b', 'hep_b3': 'hep-b', 'hep_b4': 'hep-b',
             'opv': 'opv', 'dtwp_dtap1': 'dtwp-dtap', 'dtwp_dtap2': 'dtwp-dtap', 'dtwp_dtap3': 'dtwp-dtap', 'dtwp_dtap': 'dtwp-dtap',
@@ -1977,41 +1977,70 @@ class PatientEducationView(View):
             'varicella': 'varicella', 'varicella_2': 'varicella',
             'hpv_2_doses': 'hpv', 'tdap_td': 'tdap-td', 'annual_influenza_vaccine': 'annual-influenza-vaccine',
         }
-        
-        # Try masters database first, then default database as fallback
+
         try:
-            vaccine = Vaccine.objects.using("masters").select_related("schedule_version").get(pk=vaccine_id)
-        except Vaccine.DoesNotExist:
-            # If not found in masters, get from default and find equivalent in masters
-            default_vaccine = get_object_or_404(Vaccine.objects.using("default").select_related("schedule_version"), pk=vaccine_id)
-            
-            # Try direct code match first
+            # Try masters database first, fallback to default
             try:
-                vaccine = Vaccine.objects.using("masters").select_related("schedule_version").get(code=default_vaccine.code)
+                vaccine = Vaccine.objects.using("masters").select_related("schedule_version").get(pk=vaccine_id)
             except Vaccine.DoesNotExist:
-                # Use mapping to find generic vaccine
-                masters_code = vaccine_mapping.get(default_vaccine.code)
-                if masters_code:
-                    try:
-                        vaccine = Vaccine.objects.using("masters").select_related("schedule_version").get(code=masters_code)
-                    except Vaccine.DoesNotExist:
-                        vaccine = default_vaccine
-                else:
-                    vaccine = default_vaccine
-        
-        # Get all available languages for this vaccine
-        videos = get_patient_videos(vaccine, [])  # Empty list = get all languages
-        
-        # Group by language
-        videos_by_lang = {}
-        for video in videos:
-            lang = video.language or "en"
-            if lang not in videos_by_lang:
-                videos_by_lang[lang] = []
-            videos_by_lang[lang].append(video)
-        
-        ctx = {
-            "vaccine": vaccine,
-            "videos_by_lang": videos_by_lang,
-        }
-        return render(request, self.template_name, ctx)
+                default_vaccine = get_object_or_404(
+                    Vaccine.objects.using("default").select_related("schedule_version"), pk=vaccine_id
+                )
+                masters_code = vaccine_mapping.get(default_vaccine.code) or default_vaccine.code
+                vaccine = (
+                    Vaccine.objects.using("masters").select_related("schedule_version")
+                    .filter(code=masters_code).first()
+                    or default_vaccine
+                )
+
+            # 🟩 STEP 1: Get preferred language (persistent across refresh)
+            lang = (
+                request.GET.get("lang")
+                or request.session.get("lang")
+                or request.COOKIES.get("lang")
+                or "en"
+            )
+
+            # 🟩 STEP 2: Fetch all available videos for the vaccine
+            videos = get_patient_videos(vaccine, [])
+
+            # Group videos by language
+            videos_by_lang = {}
+            for video in videos:
+                if video.video_url:
+                    vlang = video.language or "en"
+                    videos_by_lang.setdefault(vlang, []).append(video)
+
+            # 🟩 STEP 3: Select videos for current language, fallback to English
+            selected_videos = videos_by_lang.get(lang)
+            if not selected_videos:
+                selected_videos = videos_by_lang.get("en", [])
+
+            # 🟩 STEP 4: Prepare context
+            ctx = {
+                "title": f"Education Videos - {vaccine.name}",
+                "vaccine": vaccine,
+                "videos_by_lang": videos_by_lang,
+                "selected_videos": selected_videos,
+                "lang": lang,
+            }
+
+            # 🟩 STEP 5: Set language in session & cookie (to persist)
+            response = render(request, self.template_name, ctx)
+            response.set_cookie("lang", lang)
+            request.session["lang"] = lang
+            return response
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in PatientEducationView: {str(e)}")
+
+            return render(request, self.template_name, {
+                "title": "Error Loading Videos",
+                "vaccine": None,
+                "videos_by_lang": {},
+                "selected_videos": [],
+                "lang": "en",
+                "error": str(e)
+            })

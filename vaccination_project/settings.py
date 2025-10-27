@@ -45,6 +45,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -96,6 +98,11 @@ DATABASES = {
         'PASSWORD': 'Hfd4U12R^E^&Y*Vy', # your MySQL password
         'HOST': '65.0.103.152',        # or 127.0.0.1
         'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            "init_command": "SET NAMES 'utf8mb4'"
+       },
     },
     'masters': {
         'ENGINE': 'django.db.backends.mysql',
@@ -104,6 +111,11 @@ DATABASES = {
         'PASSWORD': os.getenv('MASTERS_DB_PASSWORD'),
         'HOST': os.getenv('MASTERS_DB_HOST'),
         'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            "init_command": "SET NAMES 'utf8mb4'"
+        },
     },
     'patients': {
         'ENGINE': 'django.db.backends.mysql',
@@ -112,6 +124,11 @@ DATABASES = {
         'PASSWORD': os.getenv('PATIENTS_DB_PASSWORD'),
         'HOST': os.getenv('PATIENTS_DB_HOST'),
         'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            "init_command": "SET NAMES 'utf8mb4'"
+        },
     },
 }
 
@@ -150,7 +167,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# ...existing code...
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

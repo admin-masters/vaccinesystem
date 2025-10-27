@@ -1,40 +1,203 @@
 {% extends "vaccinations/base.html" %}
-{% block title %}{{ vaccine.name }} — Patient Education{% endblock %}
+{% load media %}
+{% block title %}{{ title }}{% endblock %}
 {% block content %}
-<h2 style="margin-bottom:8px">{{ vaccine.name }}</h2>
-<p class="muted" style="margin-top:-4px">Select your preferred language.</p>
+
+<h2 style="margin-bottom:6px">{{ vaccine.name }}</h2>
+<p class="muted">Educational videos for this vaccine</p>
 
 {% if videos_by_lang %}
-<div style="display:flex; gap:8px; flex-wrap:wrap; margin:12px 0">
   {% for lang, videos in videos_by_lang.items %}
-  <a href="#lang-{{ lang }}" class="btn" style="padding:6px 10px;">{{ lang|upper }}</a>
-  {% endfor %}
-</div>
+    <h3 style="margin-top:20px;">Language: {{ lang|upper }}</h3>
+    <div style="display:flex; flex-direction:column; gap:24px">
+      {% for v in videos %}
+      <div style="border:1px solid #eee; border-radius:10px; padding:12px; background:#fafafa;">
+        <div style="font-weight:600; margin-bottom:8px;">
+          {{ v.title|default:v.language|upper }}
+        </div>
 
-{% for lang, videos in videos_by_lang.items %}
-<div id="lang-{{ lang }}" style="margin:14px 0 24px;">
-  <h3 style="margin-bottom:8px">{{ lang|upper }}</h3>
-  {% for video in videos %}
-  {% if "youtube" in video.video_url %}
-  {% with video.video_url|cut:"https://youtu.be/" as short %}
-  {% with video.video_url|cut:"https://www.youtube.com/watch?v=" as long %}
-  <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px;">
-    <iframe src="https://www.youtube.com/embed/{{ long|default:short }}" frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-      style="position:absolute; top:0; left:0; width:100%; height:100%"></iframe>
-  </div>
-  <p style="margin-top:8px">
-    <a class="muted" href="{{ video.video_url }}" target="_blank" rel="noopener">Open in YouTube</a>
-  </p>
-  {% endwith %}{% endwith %}
-  {% else %}
-  <p><a class="btn" href="{{ video.video_url }}" target="_blank">Open video</a></p>
-  {% endif %}
+        {% youtube_embed v.video_url as embed_src %}
+        
+        {% if embed_src %}
+          <!-- YouTube Player with Error Handling -->
+          <div id="player-container-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+               style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; margin-top:8px;">
+            <iframe 
+              id="yt-player-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+              src="{{ embed_src }}"
+              style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              loading="lazy"
+              title="YouTube video: {{ v.title|default:'Vaccine Education' }}"
+              onerror="handleYouTubeError(this)"
+              onload="handleYouTubeLoad(this)">
+            </iframe>
+            
+            <!-- Loading Spinner -->
+            <div id="loading-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+                 style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+              <div style="border:4px solid #f3f3f3; border-top:4px solid #1976d2; border-radius:50%; width:40px; height:40px; animation:spin 2s linear infinite; margin:0 auto;"></div>
+              <p>Loading video...</p>
+            </div>
+          </div>
+          
+          <!-- Fallback Container (Hidden Initially) -->
+          <div id="fallback-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+               style="display:none; background:#fff3cd; padding:15px; border-radius:6px; margin-top:8px;">
+            <p style="margin:0 0 10px 0; color:#856404;">
+              <strong>Video playback issue detected</strong><br>
+              This video failed to load properly.
+            </p>
+            <a href="{{ v.video_url }}" target="_blank" rel="noopener"
+               style="background:#1976d2; color:white; padding:8px 16px; border-radius:4px; text-decoration:none; display:inline-block;">
+              Watch Directly on YouTube ↗
+            </a>
+            <button onclick="retryVideo('{{ embed_src }}', '{{ forloop.parentloop.counter }}-{{ forloop.counter }}')"
+                    style="background:#28a745; color:white; padding:8px 16px; border-radius:4px; border:none; margin-left:10px; cursor:pointer;">
+              Retry Loading
+            </button>
+          </div>
+          
+        {% else %}
+          <!-- Invalid URL Case -->
+          <div style="background:#ffebee; color:#c62828; padding:12px; border-radius:6px; margin-top:8px;">
+            <p style="margin:0 0 8px 0;">
+              <strong>Invalid video URL</strong>
+            </p>
+            {% if v.video_url %}
+              <a class="btn" href="{{ v.video_url }}" target="_blank" rel="noopener" 
+                 style="background:#c62828; color:white; padding:6px 12px; border-radius:4px; text-decoration:none;">
+                 Open on YouTube ↗
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
   {% endfor %}
-  <hr>
-</div>
-{% endfor %}
 {% else %}
-<p class="muted">Education video is currently unavailable for this vaccine.</p>
+  <p class="muted">No videos are available for this vaccine yet.</p>
 {% endif %}
+
+<!-- JavaScript for YouTube Error Handling -->
+<script>
+// Global variables to track player states
+const playerStates = {};
+
+function handleYouTubeLoad(iframe) {
+  console.log('YouTube iframe loaded:', iframe.id);
+  const id = iframe.id.replace('yt-player-', '');
+  const loadingElement = document.getElementById('loading-' + id);
+  if (loadingElement) {
+    loadingElement.style.display = 'none';
+  }
+  
+  // Set timeout to check if video actually plays
+  playerStates[iframe.id] = 'loading';
+  setTimeout(() => {
+    if (playerStates[iframe.id] === 'loading') {
+      // If still loading after 5 seconds, show error
+      handleYouTubeError(iframe);
+    }
+  }, 5000);
+}
+
+function handleYouTubeError(iframe) {
+  console.log('YouTube iframe error:', iframe.id);
+  const id = iframe.id.replace('yt-player-', '');
+  
+  // Hide the iframe and loading spinner
+  iframe.style.display = 'none';
+  const loadingElement = document.getElementById('loading-' + id);
+  if (loadingElement) {
+    loadingElement.style.display = 'none';
+  }
+  
+  // Show fallback options
+  const fallbackElement = document.getElementById('fallback-' + id);
+  if (fallbackElement) {
+    fallbackElement.style.display = 'block';
+  }
+  
+  playerStates[iframe.id] = 'error';
+}
+
+function retryVideo(embedSrc, playerId) {
+  const iframe = document.getElementById('yt-player-' + playerId);
+  const fallbackElement = document.getElementById('fallback-' + playerId);
+  const loadingElement = document.getElementById('loading-' + playerId);
+  
+  if (iframe && fallbackElement && loadingElement) {
+    // Show loading, hide fallback
+    fallbackElement.style.display = 'none';
+    loadingElement.style.display = 'block';
+    iframe.style.display = 'block';
+    
+    // Add cache busting parameter to force reload
+    const cacheBuster = '&cache=' + new Date().getTime();
+    iframe.src = embedSrc + cacheBuster;
+    
+    playerStates[iframe.id] = 'retrying';
+    
+    // Set timeout for retry
+    setTimeout(() => {
+      if (playerStates[iframe.id] === 'retrying') {
+        handleYouTubeError(iframe);
+      }
+    }, 5000);
+  }
+}
+
+// Initialize all players when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Hide all loading spinners after 8 seconds (safety net)
+  setTimeout(() => {
+    const loadingElements = document.querySelectorAll('[id^="loading-"]');
+    loadingElements.forEach(element => {
+      if (element.style.display !== 'none') {
+        element.style.display = 'none';
+      }
+    });
+  }, 8000);
+});
+
+// CSS for loading animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+<style>
+  .btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #1976d2;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: #1565c0;
+  }
+  
+  /* Loading animation */
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+</style>
+
+<p style="margin-top:16px;">
+  <a class="btn" href="javascript:history.back()">← Back</a>
+</p>
+
 {% endblock %}

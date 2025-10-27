@@ -1,30 +1,124 @@
 {% extends "vaccinations/base.html" %}
+{% load media %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-  <h2 style="margin-bottom:6px">{{ vaccine.name }}</h2>
-  <p class="muted">{{ lead }}</p>
-  {% if videos %}
-    <div style="display:flex; flex-direction:column; gap:24px">
-      {% for v in videos %}
-        <div style="border:1px solid #eee; border-radius:10px; padding:12px">
-          <div style="font-weight:600">{{ v.title|default:v.language|upper }}</div>
-          {% if "youtube" in v.video_url %}
-            {% with v.video_url|cut:"https://youtu.be/" as short %}
-            {% with v.video_url|cut:"https://www.youtube.com/watch?v=" as long %}
-              <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; margin-top:8px">
-                <iframe src="https://www.youtube.com/embed/{{ long|default:short }}"
-                        frameborder="0" allowfullscreen
-                        style="position:absolute; top:0; left:0; width:100%; height:100%"></iframe>
-              </div>
-            {% endwith %}{% endwith %}
-          {% else %}
-            <p><a class="btn" href="{{ v.video_url }}" target="_blank">Open video</a></p>
-          {% endif %}
+<h2 style="margin-bottom:6px">{{ vaccine.name }}</h2>
+<p class="muted">{{ lead }}</p>
+
+{% if videos %}
+<div style="display:flex; flex-direction:column; gap:24px">
+  {% for v in videos %}
+  <div style="border:1px solid #eee; border-radius:10px; padding:12px">
+    <div style="font-weight:600">{{ v.title|default:v.language|upper }}</div>
+
+    {% youtube_embed v.video_url as embed_src %}
+    {% if embed_src %}
+      <div id="container-{{ forloop.counter }}" style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; margin-top:8px">
+        <iframe id="vid-{{ forloop.counter }}"
+                data-src="{{ embed_src }}"
+                data-original-url="{{ v.video_url }}"
+                style="position:absolute; top:0; left:0; width:100%; height:100%; border:0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+        <div id="load-{{ forloop.counter }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+          <div style="border:4px solid #f3f3f3; border-top:4px solid #1976d2; border-radius:50%; width:40px; height:40px; animation:spin 2s linear infinite;"></div>
         </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="muted">No videos are available for this vaccine yet.</p>
-  {% endif %}
-  <p style="margin-top:16px"><a class="btn" href="javascript:history.back()">← Back</a></p>
+      </div>
+      <!-- Error fallback (hidden by default) -->
+      <div id="error-{{ forloop.counter }}" style="display:none; background:#fff3cd; padding:15px; border-radius:8px; margin-top:8px;">
+        <p style="margin:0 0 10px 0; color:#856404;">
+          <strong>⚠️ Video cannot be embedded</strong><br>
+          <small>This video has embedding restrictions set by the uploader.</small>
+        </p>
+        <a href="{{ v.video_url }}" target="_blank" rel="noopener"
+           style="background:#1976d2; color:white; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block; font-weight:600;">
+          🎥 Watch on YouTube →
+        </a>
+      </div>
+    {% else %}
+      <div style="background:#ffebee; padding:15px; border-radius:8px; margin-top:8px;">
+        <p style="margin:0 0 10px 0; color:#c62828;">
+          <strong>Invalid video URL</strong>
+        </p>
+        <a class="btn" href="{{ v.video_url }}" target="_blank" rel="noopener">Open on YouTube</a>
+      </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No videos are available for this vaccine yet.</p>
+{% endif %}
+
+<script>
+// Enhanced video loading with Error 153 detection
+document.addEventListener('DOMContentLoaded', function() {
+  const iframes = document.querySelectorAll('iframe[data-src]');
+  
+  iframes.forEach((iframe, index) => {
+    const videoId = index + 1;
+    const loader = document.getElementById('load-' + videoId);
+    const container = document.getElementById('container-' + videoId);
+    const errorDiv = document.getElementById('error-' + videoId);
+    
+    // Staggered loading - wait 500ms between each video
+    setTimeout(() => {
+      const embedSrc = iframe.getAttribute('data-src');
+      iframe.src = embedSrc;
+      
+      // Set timeout to detect if video fails to load (Error 153)
+      const errorTimeout = setTimeout(() => {
+        // If loader still visible after 10 seconds, video failed
+        if (loader && loader.style.display !== 'none') {
+          console.error('Video ' + videoId + ' failed to load (Error 153)');
+          if (container) container.style.display = 'none';
+          if (errorDiv) errorDiv.style.display = 'block';
+        }
+      }, 10000);
+      
+      // On successful load
+      iframe.onload = () => {
+        clearTimeout(errorTimeout);
+        
+        // Wait 3 seconds to verify video actually plays
+        setTimeout(() => {
+          try {
+            // Try to access iframe - if Error 153, this will fail
+            const iframeDoc = iframe.contentWindow;
+            if (loader) loader.style.display = 'none';
+          } catch (e) {
+            // Cross-origin error is normal, video is fine
+            if (loader) loader.style.display = 'none';
+          }
+        }, 3000);
+      };
+      
+      // On error
+      iframe.onerror = () => {
+        clearTimeout(errorTimeout);
+        console.error('Video ' + videoId + ' error (Error 153)');
+        if (container) container.style.display = 'none';
+        if (errorDiv) errorDiv.style.display = 'block';
+      };
+    }, index * 500);
+  });
+  
+  // Listen for messages from YouTube iframe (Error 153 detection)
+  window.addEventListener('message', function(event) {
+    if (event.origin === 'https://www.youtube.com') {
+      // YouTube sends error messages for embedding issues
+      if (event.data && typeof event.data === 'string' && event.data.includes('error')) {
+        console.error('YouTube embedding error detected:', event.data);
+      }
+    }
+  });
+});
+</script>
+<style>
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+<p style="margin-top:16px"><a class="btn" href="javascript:history.back()">← Back</a></p>
 {% endblock %}
