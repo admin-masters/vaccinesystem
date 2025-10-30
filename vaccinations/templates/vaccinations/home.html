@@ -1,10 +1,11 @@
 {% extends "vaccinations/base.html" %}
-{% block title %}Vaccination Card — Home{% endblock %}
+{% block title %}Welcome — Vaccination System{% endblock %}
 {% block content %}
-  <h2>Vaccination Card</h2>
-  <p class="muted">Use the options below to add a child or update a vaccination record.</p>
-  <div class="grid-2" style="margin-top:18px;">
-    <a class="btn btn-block" href="{% url 'vaccinations:add' %}">Add Record</a>
-    <a class="btn btn-block" href="{% url 'vaccinations:update' %}">Update Record</a>
+  <div class="card" style="padding:24px; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,0.06); max-width:720px; margin:0 auto;">
+    <h2 style="margin:0 0 12px 0;">Choose an option</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:14px;">
+      <a class="btn btn-block" href="{% url 'vaccinations:doctor-register-self' %}" style="padding:16px 20px; font-weight:700;">Doctor Registration</a>
+      <a class="btn btn-block" href="{% url 'admin:index' %}" style="padding:16px 20px; font-weight:700; background:#6d28d9;">Field Partner (Admin)</a>
+    </div>
   </div>
 {% endblock %}

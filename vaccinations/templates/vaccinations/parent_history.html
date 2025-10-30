@@ -81,7 +81,7 @@
         {% for r in rows %}
         <tr style="background:#faf5ff; border-bottom:1px solid #e9d5ff;">
           <td style="padding:10px 8px;">
-            <a href="{% url 'vaccinations:parent-edu' r.vaccine_id %}" target="_blank"
+            <a href="{% url 'vaccinations:parent-edu' r.vaccine_id %}?child={{ child.id }}" target="_blank"
               style="color:#6d28d9; font-weight:600; text-decoration:underline;">
               {{ r.vaccine_name }} — {{ r.dose_label }}
             </a>

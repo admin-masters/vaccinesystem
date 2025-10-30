@@ -6,6 +6,11 @@ from .models import (
     UiString, UiStringTranslation
 )
 from .utils import normalize_msisdn, hmac_sha256
+
+# Admin branding
+admin.site.site_header = "Field Partner Admin"
+admin.site.site_title = "Vaccination System Admin"
+admin.site.index_title = "Manage Partners, Clinics, Doctors, and Education"
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "registration_token", "created_at")

@@ -4,7 +4,7 @@ from .views import (
     HomeView, AddRecordView, UpdateLookupView,
     VaccinationCardDueView, VaccinationCardAllView,
     ChildCardAPI,
-    PartnerCreateUploadView,
+    PartnerCreateUploadView, AdminAccessView,
     DoctorRegisterSelfView, DoctorRegisterPartnerView,
     DoctorPortalHomeView, DoctorPortalAddRecordView, DoctorPortalUpdateLookupView,
     DoctorPortalCardDueView, DoctorPortalCardAllView, DoctorPortalEditProfileView,
@@ -32,6 +32,7 @@ urlpatterns = [
 
     # Admin publishing
     path("partners/new/", PartnerCreateUploadView.as_view(), name="partner-create"),
+    path("admin/access/", AdminAccessView.as_view(), name="admin-access"),
     # Doctor registration
     path("doctor/register/", DoctorRegisterSelfView.as_view(), name="doctor-register-self"),
     path("doctor/register/<str:token>/", DoctorRegisterPartnerView.as_view(), name="doctor-register-partner"),
