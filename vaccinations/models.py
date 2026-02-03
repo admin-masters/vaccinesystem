@@ -221,11 +221,11 @@ class VaccineDose(models.Model):
         constraints = [
             models.CheckConstraint(
                 name="vd_offset_range_valid",
-                check=(models.Q(max_offset_days__isnull=True) |
+                condition=(models.Q(max_offset_days__isnull=True) |
                        models.Q(max_offset_days__gte=models.F("min_offset_days"))),
             ),
             models.CheckConstraint(name="vd_prev_not_self",
-                                   check=~models.Q(previous_dose=models.F("id"))),
+                                   condition=~models.Q(previous_dose=models.F("id"))),
         ]
 
 class ChildDose(models.Model):
