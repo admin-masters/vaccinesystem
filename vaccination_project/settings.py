@@ -18,7 +18,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
-load_dotenv(BASE_DIR / '.env')
+# load_dotenv(BASE_DIR / '.env')
+load_dotenv(Path("/var/www/secrets/.env"))
 
 PATIENT_DATA_FERNET_KEY = os.environ.get("PATIENT_DATA_FERNET_KEY")
 if not PATIENT_DATA_FERNET_KEY:
