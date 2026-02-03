@@ -3,20 +3,20 @@ set -e
 
 echo "🚀 Starting Vaccine System Deployment..."
 
-APP_DIR="/var/www/vaccine"
+APP_DIR="/var/www/vaccinesystem"
 VENV_DIR="/var/www/venv"
 ENV_FILE="/var/www/secrets/.env"
 
 echo "📂 Moving to app directory"
 cd $APP_DIR
 
-echo "🔄 Pulling latest code from GitHub"
+echo "🔄 Pulling latest code"
 git pull origin main
 
 echo "🐍 Activating virtual environment"
 source $VENV_DIR/bin/activate
 
-echo "📦 Installing dependencies"
+echo "📦 Installing requirements"
 pip install --upgrade pip
 pip install -r requirements.txt
 
