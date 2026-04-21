@@ -1,4 +1,4 @@
-from django.db import migrations
+from django.db import OperationalError, migrations
 
 def table_exists(schema_editor, table):
     return table in schema_editor.connection.introspection.table_names(schema_editor.connection.cursor())
@@ -10,10 +10,17 @@ def drop_idx_if_exists(schema_editor, table, index):
         constraints = schema_editor.connection.introspection.get_constraints(cursor, table)
     if index not in constraints:
         return
-    if schema_editor.connection.vendor == "mysql":
-        schema_editor.execute(f"DROP INDEX `{index}` ON `{table}`")
-    else:
-        schema_editor.execute(f'DROP INDEX "{index}"')
+    try:
+        if schema_editor.connection.vendor == "mysql":
+            schema_editor.execute(f"DROP INDEX `{index}` ON `{table}`")
+        else:
+            schema_editor.execute(f'DROP INDEX "{index}"')
+    except OperationalError as exc:
+        # MySQL can keep this index as the backing index for the FK on child.parent_id.
+        # In that case, leaving the index in place is safe and the migration should continue.
+        if schema_editor.connection.vendor == "mysql" and getattr(exc, "args", [None])[0] == 1553:
+            return
+        raise
 
 def forwards(apps, schema_editor):
     for idx in (
