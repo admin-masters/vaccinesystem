@@ -16,6 +16,7 @@ def forwards(apps, schema_editor):
             )
 
 class Migration(migrations.Migration):
+    atomic = False
     dependencies = [
         ('vaccinations', '0016_remove_child_child_parent__16983e_idx_and_more'),
     ]
