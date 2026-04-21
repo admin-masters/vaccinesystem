@@ -1,6 +1,11 @@
 from django.db import migrations
 
+def table_exists(schema_editor, table):
+    return table in schema_editor.connection.introspection.table_names(schema_editor.connection.cursor())
+
 def drop_idx_if_exists(schema_editor, table, index):
+    if not table_exists(schema_editor, table):
+        return
     with schema_editor.connection.cursor() as cursor:
         constraints = schema_editor.connection.introspection.get_constraints(cursor, table)
     if index not in constraints:
