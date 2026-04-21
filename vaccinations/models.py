@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from django.utils import timezone
 import secrets
@@ -234,6 +235,21 @@ class VaccineDose(models.Model):
     series_seq  = models.PositiveSmallIntegerField(default=1, db_index=True)
     notes = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def _validate_previous_dose_not_self(self) -> None:
+        if self.previous_dose is self:
+            raise ValidationError({"previous_dose": "A vaccine dose cannot reference itself."})
+        if self.pk and self.previous_dose_id == self.pk:
+            raise ValidationError({"previous_dose": "A vaccine dose cannot reference itself."})
+
+    def clean(self):
+        super().clean()
+        self._validate_previous_dose_not_self()
+
+    def save(self, *args, **kwargs):
+        self._validate_previous_dose_not_self()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "vaccine_dose"
         unique_together = [("schedule_version", "vaccine", "sequence_index")]
@@ -248,8 +264,6 @@ class VaccineDose(models.Model):
                 condition=(models.Q(max_offset_days__isnull=True) |
                        models.Q(max_offset_days__gte=models.F("min_offset_days"))),
             ),
-            models.CheckConstraint(name="vd_prev_not_self",
-                                   condition=~models.Q(previous_dose=models.F("id"))),
         ]
 
 class ChildDose(models.Model):
@@ -575,4 +589,3 @@ class UiStringTranslation(models.Model):
         db_table = "ui_string_translation"
         unique_together = [("ui", "language")]
     def __str__(self): return f"{self.ui.key}[{self.language}]"
-

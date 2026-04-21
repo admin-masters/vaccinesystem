@@ -154,10 +154,6 @@ class Migration(migrations.Migration):
             model_name='vaccinedose',
             constraint=models.CheckConstraint(condition=models.Q(('max_offset_days__isnull', True), ('max_offset_days__gte', models.F('min_offset_days')), _connector='OR'), name='vd_offset_range_valid'),
         ),
-        migrations.AddConstraint(
-            model_name='vaccinedose',
-            constraint=models.CheckConstraint(condition=models.Q(('previous_dose', models.F('id')), _negated=True), name='vd_prev_not_self'),
-        ),
         migrations.AlterUniqueTogether(
             name='vaccinedose',
             unique_together={('schedule_version', 'vaccine', 'sequence_index')},
