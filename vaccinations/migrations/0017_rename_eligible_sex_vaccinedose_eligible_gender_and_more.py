@@ -2,6 +2,9 @@
 from django.db import migrations
 
 def forwards(apps, schema_editor):
+    tables = set(schema_editor.connection.introspection.table_names(schema_editor.connection.cursor()))
+    if "vaccine_dose" not in tables:
+        return
     with schema_editor.connection.cursor() as c:
         columns = {
             col.name

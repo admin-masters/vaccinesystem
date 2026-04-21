@@ -2,6 +2,13 @@
 from django.db import migrations, transaction
 from django.core.exceptions import FieldError
 
+REQUIRED_TABLES = {"schedule_version", "vaccine", "vaccine_dose"}
+
+
+def _table_names(schema_editor):
+    return set(schema_editor.connection.introspection.table_names(schema_editor.connection.cursor()))
+
+
 def _set_seq(obj, seq):
     if hasattr(obj, "sequence_index"):
         obj.sequence_index = seq
@@ -12,9 +19,15 @@ def forwards(apps, schema_editor):
     ScheduleVersion = apps.get_model("vaccinations", "ScheduleVersion")
     Vaccine = apps.get_model("vaccinations", "Vaccine")
     VaccineDose = apps.get_model("vaccinations", "VaccineDose")
+    db_alias = schema_editor.connection.alias
+    existing_tables = _table_names(schema_editor)
+
+    if not REQUIRED_TABLES.issubset(existing_tables):
+        print(f"Skipping influenza migration on {db_alias}: required tables not present")
+        return
 
     # Prefer is_current if present; fall back gracefully.
-    qs = ScheduleVersion.objects.order_by("-effective_from", "-id")
+    qs = ScheduleVersion.objects.using(db_alias).order_by("-effective_from", "-id")
     sv = None
     try:
         sv = qs.filter(is_current=True).first()
@@ -30,7 +43,7 @@ def forwards(apps, schema_editor):
         return
 
     def get_vaccine_qs():
-        qs = Vaccine.objects
+        qs = Vaccine.objects.using(db_alias)
         if sv:
             qs = qs.filter(schedule_version=sv)
         return qs
@@ -54,7 +67,7 @@ def forwards(apps, schema_editor):
         v_annual = v_infl
 
     # Get existing doses for Influenza series
-    dose_qs = VaccineDose.objects
+    dose_qs = VaccineDose.objects.using(db_alias)
     if sv:
         dose_qs = dose_qs.filter(schedule_version=sv)
     
@@ -69,7 +82,7 @@ def forwards(apps, schema_editor):
         (v_annual, "Annual (Year 5)",     1825, 5,    "A"),
     ]
 
-    with transaction.atomic():
+    with transaction.atomic(using=db_alias):
         doses_to_save = []
         
         # First pass: prepare all doses
@@ -109,16 +122,17 @@ def forwards(apps, schema_editor):
         # Save all doses
         for dose, _ in doses_to_save:
             try:
-                dose.save()
+                dose.save(using=db_alias)
             except Exception as e:
                 print(f"Error saving dose {dose.dose_label}: {e}")
                 # Try to update if it's a unique constraint error
                 if 'unique' in str(e).lower():
                     # Find and update existing record
-                    existing = VaccineDose.objects.filter(
+                    seq_value = getattr(dose, "sequence_index", getattr(dose, "series_seq", None))
+                    existing = VaccineDose.objects.using(db_alias).filter(
                         vaccine=dose.vaccine,
                         schedule_version=sv,
-                        **{('sequence_index' if hasattr(dose, 'sequence_index') else 'series_seq'): _set_seq(dose, 0) and getattr(dose, 'sequence_index', getattr(dose, 'series_seq', None))}
+                        **{('sequence_index' if hasattr(dose, 'sequence_index') else 'series_seq'): seq_value}
                     ).first()
                     if existing:
                         existing.series_key = dose.series_key
@@ -127,7 +141,7 @@ def forwards(apps, schema_editor):
                         existing.max_offset_days = dose.max_offset_days
                         existing.anchor_policy = dose.anchor_policy
                         existing.is_active = True
-                        existing.save()
+                        existing.save(using=db_alias)
                         # Replace in our list for relationship setting
                         doses_to_save = [(existing if d[0] == dose else d[0], d[1]) for d in doses_to_save]
 
@@ -137,7 +151,7 @@ def forwards(apps, schema_editor):
                 prev_dose = doses_to_save[prev_seq - 1][0]
                 dose.previous_dose = prev_dose
                 try:
-                    dose.save(update_fields=["previous_dose_id"])
+                    dose.save(using=db_alias, update_fields=["previous_dose_id"])
                 except Exception as e:
                     print(f"Error setting previous dose for {dose.dose_label}: {e}")
 
