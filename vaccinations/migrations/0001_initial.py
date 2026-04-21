@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
                 ('full_name', models.CharField(blank=True, default='', max_length=120)),
                 ('whatsapp_e164', models.CharField(help_text='Parent WhatsApp in E.164 format, e.g. +919812345678', max_length=20, unique=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('clinic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='parents', to='vaccinations.clinic')),
+                ('clinic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='parents', to='vaccinations.clinic', db_constraint=False)),
             ],
             options={
                 'db_table': 'parent',
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
                 ('sex', models.CharField(blank=True, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')], max_length=1, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('clinic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='children', to='vaccinations.clinic')),
+                ('clinic', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='children', to='vaccinations.clinic', db_constraint=False)),
                 ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='children', to='vaccinations.parent')),
             ],
             options={
@@ -116,7 +116,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('child', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='doses', to='vaccinations.child')),
-                ('dose', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='child_doses', to='vaccinations.vaccinedose')),
+                ('dose', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='child_doses', to='vaccinations.vaccinedose', db_constraint=False)),
             ],
             options={
                 'db_table': 'child_dose',

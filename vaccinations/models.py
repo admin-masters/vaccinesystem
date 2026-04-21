@@ -104,7 +104,14 @@ class Child(models.Model):
     
     # Foreign keys
     parent = models.ForeignKey("Parent", on_delete=models.CASCADE, related_name="children")
-    clinic = models.ForeignKey("Clinic", on_delete=models.SET_NULL, null=True, blank=True, related_name="children")
+    clinic = models.ForeignKey(
+        "Clinic",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="children",
+        db_constraint=False,
+    )
     
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -268,7 +275,12 @@ class VaccineDose(models.Model):
 
 class ChildDose(models.Model):
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="doses")
-    dose = models.ForeignKey(VaccineDose, on_delete=models.PROTECT, related_name="child_doses")
+    dose = models.ForeignKey(
+        VaccineDose,
+        on_delete=models.PROTECT,
+        related_name="child_doses",
+        db_constraint=False,
+    )
     given_date = models.DateField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
     due_until_date = models.DateField(blank=True, null=True)
@@ -277,7 +289,12 @@ class ChildDose(models.Model):
     last_reminder_at = models.DateTimeField(blank=True, null=True)
     last_reminder_for_date = models.DateField(blank=True, null=True)
     last_reminder_by = models.ForeignKey(
-        "Doctor", on_delete=models.SET_NULL, null=True, blank=True, related_name="reminders_sent"
+        "Doctor",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reminders_sent",
+        db_constraint=False,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -467,8 +484,14 @@ class ChildShareLink(models.Model):
     token = models.CharField(max_length=64, unique=True, db_index=True)
     # store only last 10 digits of the parent's WhatsApp number for verification
     expected_last10 = models.CharField(max_length=10)
-    created_by = models.ForeignKey(Doctor, null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name="child_share_links")
+    created_by = models.ForeignKey(
+        Doctor,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="child_share_links",
+        db_constraint=False,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
