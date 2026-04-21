@@ -17,13 +17,16 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-for env_path in (
-    BASE_DIR / ".env",
-    BASE_DIR / ".env.production",
-    Path("/var/www/secrets/.env"),
-):
-    if env_path.exists():
-        load_dotenv(env_path, override=True)
+SERVER_ENV_FILE = Path("/var/www/secrets/.env")
+
+# Production uses /var/www/secrets/.env on the server. For local fallback we
+# still honor repo-level env files if the server file is not present.
+if SERVER_ENV_FILE.exists():
+    load_dotenv(SERVER_ENV_FILE, override=True)
+else:
+    for env_path in (BASE_DIR / ".env", BASE_DIR / ".env.production"):
+        if env_path.exists():
+            load_dotenv(env_path, override=True)
 
 
 def require_env(name: str) -> str:
