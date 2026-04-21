@@ -326,13 +326,13 @@ class AddRecordView(View):
                     raise
             parents_qs = Parent.objects.using("patients").filter(pk=parent.pk)
 
-        # Use get_or_create to avoid duplicates
+        # Use the legacy field names that still back the live model.
         child, created = Child.objects.using("patients").get_or_create(
             parent=parent,
-            child_name=form.cleaned_data["child_name"],
+            full_name=form.cleaned_data["child_name"],
             date_of_birth=form.cleaned_data["date_of_birth"],
             defaults={
-                "gender": form.cleaned_data["gender"],
+                "sex": form.cleaned_data["gender"],
                 "state": form.cleaned_data["state"],
             }
         )
@@ -670,9 +670,9 @@ class VaccinationHistoryCSVExportView(View):
             date_value = cd.given_date if given else cd.due_date
             
             writer.writerow([
-                child.child_name,
-                child.date_of_birth.strftime("%Y-%m-%d") if child.date_of_birth else "",
-                child.get_gender_display() if child.gender else "",
+                child.get_child_name(),
+                child.get_date_of_birth_encrypted().strftime("%Y-%m-%d") if child.get_date_of_birth_encrypted() else "",
+                child.get_gender_display(),
                 v.name,
                 cd.dose.dose_label,
                 status_text,

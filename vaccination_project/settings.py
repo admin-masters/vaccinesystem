@@ -17,17 +17,44 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file
-# load_dotenv(BASE_DIR / '.env')
-load_dotenv(Path("/var/www/secrets/.env"))
+for env_path in (
+    BASE_DIR / ".env",
+    BASE_DIR / ".env.production",
+    Path("/var/www/secrets/.env"),
+):
+    if env_path.exists():
+        load_dotenv(env_path, override=True)
 
-PATIENT_DATA_FERNET_KEY = os.environ.get("PATIENT_DATA_FERNET_KEY")
-if not PATIENT_DATA_FERNET_KEY:
-    raise ValueError("PATIENT_DATA_FERNET_KEY environment variable is missing!")
+
+def require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise ValueError(f"{name} environment variable is missing!")
+    return value
+
+PATIENT_DATA_FERNET_KEY = require_env("PATIENT_DATA_FERNET_KEY")
 
 # Ensure bytes
 if isinstance(PATIENT_DATA_FERNET_KEY, str):
     PATIENT_DATA_FERNET_KEY = PATIENT_DATA_FERNET_KEY.encode()
+
+CLINIC_DB_NAME = require_env("CLINIC_DB_NAME")
+CLINIC_DB_USER = require_env("CLINIC_DB_USER")
+CLINIC_DB_PASSWORD = require_env("CLINIC_DB_PASSWORD")
+CLINIC_DB_HOST = require_env("CLINIC_DB_HOST")
+CLINIC_DB_PORT = os.getenv("CLINIC_DB_PORT", "3306")
+
+MASTERS_DB_NAME = require_env("MASTERS_DB_NAME")
+MASTERS_DB_USER = require_env("MASTERS_DB_USER")
+MASTERS_DB_PASSWORD = require_env("MASTERS_DB_PASSWORD")
+MASTERS_DB_HOST = require_env("MASTERS_DB_HOST")
+MASTERS_DB_PORT = os.getenv("MASTERS_DB_PORT", "3306")
+
+PATIENTS_DB_NAME = require_env("PATIENTS_DB_NAME")
+PATIENTS_DB_USER = require_env("PATIENTS_DB_USER")
+PATIENTS_DB_PASSWORD = require_env("PATIENTS_DB_PASSWORD")
+PATIENTS_DB_HOST = require_env("PATIENTS_DB_HOST")
+PATIENTS_DB_PORT = os.getenv("PATIENTS_DB_PORT", "3306")
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -96,11 +123,11 @@ WSGI_APPLICATION = 'vaccination_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'clinic_db',       # your database name
-        'USER': 'clinic_user',    # your MySQL username
-        'PASSWORD': 'Hfd4U12R^E^&Y*Vy', # your MySQL password
-        'HOST': '65.0.103.152',        # or 127.0.0.1
-        'PORT': '3306',
+        'NAME': CLINIC_DB_NAME,
+        'USER': CLINIC_DB_USER,
+        'PASSWORD': CLINIC_DB_PASSWORD,
+        'HOST': CLINIC_DB_HOST,
+        'PORT': CLINIC_DB_PORT,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'use_unicode': True,
@@ -109,11 +136,11 @@ DATABASES = {
     },
     'masters': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MASTERS_DB_NAME'),
-        'USER': os.getenv('MASTERS_DB_USER'),
-        'PASSWORD': os.getenv('MASTERS_DB_PASSWORD'),
-        'HOST': os.getenv('MASTERS_DB_HOST'),
-        'PORT': '3306',
+        'NAME': MASTERS_DB_NAME,
+        'USER': MASTERS_DB_USER,
+        'PASSWORD': MASTERS_DB_PASSWORD,
+        'HOST': MASTERS_DB_HOST,
+        'PORT': MASTERS_DB_PORT,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'use_unicode': True,
@@ -122,11 +149,11 @@ DATABASES = {
     },
     'patients': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('PATIENTS_DB_NAME'),
-        'USER': os.getenv('PATIENTS_DB_USER'),
-        'PASSWORD': os.getenv('PATIENTS_DB_PASSWORD'),
-        'HOST': os.getenv('PATIENTS_DB_HOST'),
-        'PORT': '3306',
+        'NAME': PATIENTS_DB_NAME,
+        'USER': PATIENTS_DB_USER,
+        'PASSWORD': PATIENTS_DB_PASSWORD,
+        'HOST': PATIENTS_DB_HOST,
+        'PORT': PATIENTS_DB_PORT,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'use_unicode': True,
@@ -196,20 +223,19 @@ SESSION_COOKIE_SECURE = True     # dev only
 LOGIN_URL = "/auth/google/start/"
 
 # ---- Google OAuth (read secrets from .env file only) ----
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-
-# Validate required OAuth environment variables
-if not GOOGLE_CLIENT_ID:
-    raise ValueError("GOOGLE_CLIENT_ID environment variable is missing from .env file!")
-if not GOOGLE_CLIENT_SECRET:
-    raise ValueError("GOOGLE_CLIENT_SECRET environment variable is missing from .env file!")
+GOOGLE_CLIENT_ID = require_env("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = require_env("GOOGLE_CLIENT_SECRET")
+GOOGLE_OAUTH_REDIRECT_PATH = os.getenv("GOOGLE_OAUTH_REDIRECT_PATH", "/auth/google/callback/")
+GOOGLE_OAUTH_REDIRECT_URI = require_env("GOOGLE_OAUTH_REDIRECT_URI")
 
 GOOGLE_OAUTH = {
     "CLIENT_ID": GOOGLE_CLIENT_ID,
     "CLIENT_SECRET": GOOGLE_CLIENT_SECRET,
-    # must exactly match one of the Redirect URIs registered in Google:
-    "REDIRECT_PATH": "/auth/google/callback/",
+    "AUTH_URL": "https://accounts.google.com/o/oauth2/v2/auth",
+    "TOKEN_URL": "https://oauth2.googleapis.com/token",
+    "USERINFO_URL": "https://www.googleapis.com/oauth2/v2/userinfo",
+    "REDIRECT_PATH": GOOGLE_OAUTH_REDIRECT_PATH,
+    "REDIRECT_URI": GOOGLE_OAUTH_REDIRECT_URI,
     "SCOPES": ["openid", "email", "profile"],
 }
 
@@ -218,4 +244,5 @@ AUTO_SEND_TO_PARENT_ON_ADD = True
 # at bottom
 MEDIA_URL  = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-PHONE_HASH_SALT = os.environ.get("PHONE_HASH_SALT", "")
+PHONE_HASH_SALT = require_env("PHONE_HASH_SALT")
+SEARCH_PEPPER = require_env("SEARCH_PEPPER")

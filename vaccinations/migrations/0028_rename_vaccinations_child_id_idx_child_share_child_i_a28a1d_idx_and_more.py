@@ -9,15 +9,4 @@ class Migration(migrations.Migration):
         ('vaccinations', '0027_auto'),
     ]
 
-    operations = [
-        migrations.RenameIndex(
-            model_name='childsharelink',
-            new_name='child_share_child_i_a28a1d_idx',
-            old_name='vaccinations_child_id_idx',
-        ),
-        migrations.RenameIndex(
-            model_name='childsharelink',
-            new_name='child_share_expires_97186c_idx',
-            old_name='vaccinations_expires_at_idx',
-        ),
-    ]
+    operations = []

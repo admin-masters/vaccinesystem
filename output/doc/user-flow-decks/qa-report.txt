@@ -1,0 +1,7 @@
+User-flow training pack QA report
+================================
+Workflow manuals: 8
+Workflow decks: 9
+Master index: 00-user-flow-training-index.pptx
+
+No missing screenshots, placeholder strings, or master-index link gaps detected.

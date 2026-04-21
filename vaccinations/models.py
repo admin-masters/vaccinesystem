@@ -114,6 +114,10 @@ class Child(models.Model):
             return decrypt(self.child_name_enc).decode()
         return self.full_name or ""
 
+    @property
+    def child_name(self) -> str:
+        return self.get_child_name()
+
     def set_child_name(self, v: str):
         """Set encrypted child name"""
         self.child_name_enc = encrypt((v or "").encode())
@@ -136,6 +140,14 @@ class Child(models.Model):
             return decrypt(self.gender_enc).decode()
         return self.sex
 
+    @property
+    def gender(self):
+        return self.get_gender()
+
+    def get_gender_display(self):
+        value = self.get_gender()
+        return dict(self.Sex.choices).get(value, "")
+
     def set_gender(self, s):
         """Set encrypted gender"""
         self.gender_enc = encrypt((s or "").encode())
@@ -149,6 +161,18 @@ class Child(models.Model):
     def set_state_encrypted(self, s):
         """Set encrypted state"""
         self.state_enc = encrypt((s or "").encode())
+
+    def save(self, *args, **kwargs):
+        # Keep the encrypted fields populated when legacy fields are still used.
+        if self.full_name and not self.child_name_enc:
+            self.set_child_name(self.full_name)
+        if self.date_of_birth and not self.date_of_birth_enc:
+            self.set_date_of_birth_encrypted(self.date_of_birth)
+        if self.sex and not self.gender_enc:
+            self.set_gender(self.sex)
+        if self.state and not self.state_enc:
+            self.set_state_encrypted(self.state)
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = "child"
@@ -551,5 +575,4 @@ class UiStringTranslation(models.Model):
         db_table = "ui_string_translation"
         unique_together = [("ui", "language")]
     def __str__(self): return f"{self.ui.key}[{self.language}]"
-
 
