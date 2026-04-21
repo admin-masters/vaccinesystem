@@ -691,7 +691,7 @@ class VaccinationHistoryCSVExportView(View):
             Child.objects.using("patients")
             .select_related("parent")
             .prefetch_related(
-                Prefetch("clinic", queryset=Clinic.objects.using("default").only("id","name","state","phone"))
+                Prefetch("clinic", queryset=Clinic.objects.using("masters").only("id","name","state","phone"))
             ),
             pk=child_id
         )

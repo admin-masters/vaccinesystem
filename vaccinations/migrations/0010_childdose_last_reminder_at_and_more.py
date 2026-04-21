@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='childdose',
             name='last_reminder_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reminders_sent', to='vaccinations.doctor'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reminders_sent', to='vaccinations.doctor', db_constraint=False),
         ),
         migrations.AddField(
             model_name='childdose',

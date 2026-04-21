@@ -18,7 +18,8 @@ class Migration(migrations.Migration):
                 ("created_by", models.ForeignKey(null=True, blank=True,
                                                  on_delete=django.db.models.deletion.SET_NULL,
                                                  related_name="child_share_links",
-                                                 to="vaccinations.doctor")),
+                                                 to="vaccinations.doctor",
+                                                 db_constraint=False)),
             ],
             options={"db_table": "child_share_link"},
         ),
@@ -31,7 +32,6 @@ class Migration(migrations.Migration):
             index=models.Index(fields=["expires_at"], name="idx_csl_exp"),
         ),
     ]
-
 
 
 
