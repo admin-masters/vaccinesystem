@@ -7,18 +7,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('vaccinations', '0025_alter_doctor_options'),
+        ("vaccinations", "0025_alter_doctor_options"),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='parent',
-            name='created_at',
-            field=models.DateTimeField(default=django.utils.timezone.now),
-        ),
-        migrations.AlterField(
-            model_name='child',
-            name='created_at',
-            field=models.DateTimeField(default=django.utils.timezone.now),
+        migrations.SeparateDatabaseAndState(
+            # `parent.created_at` already exists in the physical table from 0001_initial.
+            # 0018 only removed it from Django's migration state, so 0026 must not try to
+            # add the column again on MySQL. The child field change is state-only as well,
+            # because the underlying DB column type does not change.
+            database_operations=[],
+            state_operations=[
+                migrations.AddField(
+                    model_name="parent",
+                    name="created_at",
+                    field=models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                migrations.AlterField(
+                    model_name="child",
+                    name="created_at",
+                    field=models.DateTimeField(default=django.utils.timezone.now),
+                ),
+            ],
         ),
     ]
