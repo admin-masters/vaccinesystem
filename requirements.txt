@@ -1,1 +1,13 @@
-
+Django==5.2.5
+djangorestframework==3.16.1
+python-dotenv==1.1.1
+whitenoise==6.9.0
+cryptography==45.0.6
+requests==2.32.4
+Pillow==11.3.0
+google-auth==2.40.3
+openpyxl==3.1.5
+mysqlclient==2.2.4
+gunicorn==23.0.0
+python-pptx==1.0.2
+pandas==2.2.3

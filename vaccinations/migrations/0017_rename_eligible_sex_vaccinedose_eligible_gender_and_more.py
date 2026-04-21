@@ -3,12 +3,14 @@ from django.db import migrations
 
 def forwards(apps, schema_editor):
     with schema_editor.connection.cursor() as c:
-        c.execute("SHOW COLUMNS FROM `vaccine_dose` LIKE 'eligible_gender'")
-        has_gender = c.fetchone()
-        c.execute("SHOW COLUMNS FROM `vaccine_dose` LIKE 'eligible_sex'")
-        has_sex = c.fetchone()
-        if (not has_gender) and has_sex:
-            c.execute("ALTER TABLE `vaccine_dose` RENAME COLUMN `eligible_sex` TO `eligible_gender`")
+        columns = {
+            col.name
+            for col in schema_editor.connection.introspection.get_table_description(c, "vaccine_dose")
+        }
+        if "eligible_gender" not in columns and "eligible_sex" in columns:
+            schema_editor.execute(
+                "ALTER TABLE vaccine_dose RENAME COLUMN eligible_sex TO eligible_gender"
+            )
 
 class Migration(migrations.Migration):
     dependencies = [

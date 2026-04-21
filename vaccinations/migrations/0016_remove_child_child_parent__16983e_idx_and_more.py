@@ -1,26 +1,20 @@
-from django.db import migrations, connection
+from django.db import migrations
 
-def drop_idx_if_exists(table, index):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT 1
-            FROM information_schema.statistics
-            WHERE table_schema = DATABASE()
-              AND table_name = %s
-              AND index_name = %s
-            LIMIT 1
-        """, [table, index])
-        if cursor.fetchone():
-            cursor.execute(f"DROP INDEX `{index}` ON `{table}`")
+def drop_idx_if_exists(schema_editor, table, index):
+    with schema_editor.connection.cursor() as cursor:
+        constraints = schema_editor.connection.introspection.get_constraints(cursor, table)
+    if index not in constraints:
+        return
+    if schema_editor.connection.vendor == "mysql":
+        schema_editor.execute(f"DROP INDEX `{index}` ON `{table}`")
+    else:
+        schema_editor.execute(f'DROP INDEX "{index}"')
 
 def forwards(apps, schema_editor):
-    # Adjust the list to match indexes in your 0016 file:
     for idx in (
         "child_parent__16983e_idx",
-        # "child_clinic__XXXXXX_idx",
-        # "child_date_of_birth_YYYYYY_idx",
     ):
-        drop_idx_if_exists("child", idx)
+        drop_idx_if_exists(schema_editor, "child", idx)
 
 class Migration(migrations.Migration):
     dependencies = [("vaccinations", "0015_patients_encryption")]

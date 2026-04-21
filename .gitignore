@@ -32,11 +32,14 @@ staticfiles/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.production
 .env.staging
 
 # Virtual environment
+.venv/
+.venv311/
 venv/
 env/
 ENV/
@@ -75,9 +78,16 @@ logs/
 *.log
 
 # Temporary files
-tmp/
+tmp/*
+!tmp/docs/
+!tmp/docs/**
+tmp/docs/logs/
+tmp/docs/demo_state.json
 temp/
 *.tmp
+
+# Local development artifacts
+local_test.sqlite3
 
 # Coverage reports
 htmlcov/

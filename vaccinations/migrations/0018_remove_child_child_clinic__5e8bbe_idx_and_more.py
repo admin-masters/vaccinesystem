@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
                 ),
                 migrations.AlterModelTable(
                     name='parent',
-                    table=None,
+                    table='parent',
                 ),
             ],
             database_operations=[],  # DB me kuch nahi karega
