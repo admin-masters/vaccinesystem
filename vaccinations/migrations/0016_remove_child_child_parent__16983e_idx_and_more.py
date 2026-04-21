@@ -22,6 +22,7 @@ def forwards(apps, schema_editor):
         drop_idx_if_exists(schema_editor, "child", idx)
 
 class Migration(migrations.Migration):
+    atomic = False
     dependencies = [("vaccinations", "0015_patients_encryption")]
     operations = [
         migrations.SeparateDatabaseAndState(
